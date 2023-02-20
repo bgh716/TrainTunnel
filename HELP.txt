@@ -1,0 +1,23 @@
+TrainsInTunnel[unit#]
+TrainsInTunnel.guidcar(ghost)
+TrainsInTunnel.passenger
+TrainsInTunnel.name(loco)
+TrainsInTunnel.type(loco)
+TrainsInTunnel.enterTick
+TrainsInTunnel.speed
+TrainsInTunnel.specialname
+TrainsInTunnel.orientation
+TrainsInTunnel.tunnelorientation
+TrainsInTunnel.manualmode
+TrainsInTunnel.length
+TrainsInTunnel.follower
+TrainsInTunnel.schedule
+TrainsInTunnel.schedule.current
+
+depart
+loco -> spooky -> check behind -> copy things
+wagon
+
+arrive
+loco ->
+wagon 
