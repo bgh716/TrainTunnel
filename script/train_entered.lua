@@ -22,7 +22,7 @@ local function entity_damaged(event)
 					position = event.cause.position,
 					force = event.cause.force
 				})
-		elseif event.entity.name == "TrainTunnelT2"
+		elseif event.entity.name == "TrainTunnelT2" then
 			SpookyGhost = event.entity.surface.create_entity
 				({
 					name = "RTPropCarT2",
@@ -58,46 +58,15 @@ local function entity_damaged(event)
 		TempTrain.destructible = false
 		
 		remote.call("logistic-train-network", "reassign_delivery", event.cause.train.id, TempTrain)
-		global.TrainsInTunnel[SpookyGhost.unit_number].temptrain  = temptrain
+		global.TrainsInTunnel[SpookyGhost.unit_number].TempTrain  = TempTrain
 		
 		--destroy current train
 		event.cause.destroy({ raise_destroy = true })
 		
-		--[[
-		
-		--]]
 		
 
-		--[[
-		global.TrainsInTunnel[SpookyGhost.unit_number].schedule = event.cause.train.schedule
-		if ((event.entity.name == "TrainTunnelT1" or event.entity.name == "TrainTunnelT2") and global.TrainsInTunnel[SpookyGhost.unit_number].schedule ~= nil) then
-			if (global.TrainsInTunnel[SpookyGhost.unit_number].schedule.current == table_size(global.TrainsInTunnel[SpookyGhost.unit_number].schedule.records)) then
-				global.TrainsInTunnel[SpookyGhost.unit_number].schedule.current = 1
-			else
-				global.TrainsInTunnel[SpookyGhost.unit_number].schedule.current = global.TrainsInTunnel[SpookyGhost.unit_number].schedule.current+1
-			end
-		end
-		--]]
 
-
-		--[[
-		if (event.cause.type == "locomotive" and event.cause.burner) then
-			global.FlyingTrains[SpookyGhost.unit_number].CurrentlyBurning = event.cause.burner.currently_burning
-			global.FlyingTrains[SpookyGhost.unit_number].RemainingFuel = event.cause.burner.remaining_burning_fuel
-			global.FlyingTrains[SpookyGhost.unit_number].FuelInventory = event.cause.get_fuel_inventory().get_contents()
-
-			--remote.call("logistic-train-network", "reassign_delivery", event.cause.train.id, TempTrain)
-		elseif (event.cause.type == "cargo-wagon") then
-			global.FlyingTrains[SpookyGhost.unit_number].cargo = event.cause.get_inventory(defines.inventory.cargo_wagon).get_contents()
-			global.FlyingTrains[SpookyGhost.unit_number].bar = event.cause.get_inventory(defines.inventory.cargo_wagon).get_bar()
-			global.FlyingTrains[SpookyGhost.unit_number].filter = {}
-			for i = 1, #event.cause.get_inventory(defines.inventory.cargo_wagon) do
-				global.FlyingTrains[SpookyGhost.unit_number].filter[i] = event.cause.get_inventory(defines.inventory.cargo_wagon).get_filter(i)
-			end
-		elseif (event.cause.type == "fluid-wagon") then
-			global.FlyingTrains[SpookyGhost.unit_number].fluids = event.cause.get_fluid_contents()
-		end
-		--]]
+		
 
 
 	--carriages entering tunnel
@@ -135,36 +104,64 @@ local function entity_damaged(event)
 		--determine orientation
 		if event.entity.orientation == 0 and event.entity.position.y-event.cause.position.y>0
 			pos = {event.entity.position.x,event.entity.position.y + 4}
-		elseif event.entity.orientation == 0.25 and event.entity.position.x-event.cause.position.x<0
+		elseif event.entity.orientation == 0.25 and event.entity.position.x-event.cause.position.x<0 then
 			pos = {event.entity.position.x-4,event.entity.position.y}
-		elseif event.entity.orientation == 0.50 and event.entity.position.y-event.cause.position.y<0
+		elseif event.entity.orientation == 0.50 and event.entity.position.y-event.cause.position.y<0 then
 			pos = {event.entity.position.x,event.entity.position.y-4}
-		elseif event.entity.orientation == 0.75 and event.entity.position.x-event.cause.position.x>0
+		elseif event.entity.orientation == 0.75 and event.entity.position.x-event.cause.position.x>0 then
 			pos = {event.entity.position.x+4,event.entity.position.y}
 		end
 		
 		--create new train
 		NewTrain = prop.GuideCar.surface.create_entity({
-						name = prop.name,
+						name = prop.train.name,
 						position = pos,
+						orientation = prop.train.orientation,
 						force = prop.GuideCar.force,
 						raise_built = true
 					})
 					
 		--Success
 		if (NewTrain ~= nil) then
-			global.TrainsInTunnel[SpookyGhost.unit_number].name = event.cause.name
-			global.TrainsInTunnel[SpookyGhost.unit_number].type = event.cause.type
-		
-			global.TrainsInTunnel[SpookyGhost.unit_number].speed = event.cause.speed
-			global.TrainsInTunnel[SpookyGhost.unit_number].SpecialName = event.cause.backer_name
-			global.TrainsInTunnel[SpookyGhost.unit_number].color = event.cause.color
-			global.TrainsInTunnel[SpookyGhost.unit_number].orientation = event.cause.orientation
-			global.TrainsInTunnel[SpookyGhost.unit_number].TunnelOrientation = event.entity.orientation
-			global.TrainsInTunnel[SpookyGhost.unit_number].ManualMode = event.cause.train.manual_mode
-			global.TrainsInTunnel[SpookyGhost.unit_number].stack = event.cause.train.carriages
+			if (prop.passenger ~= nil) then
+				if (prop.passenger.is_player()) then
+					NewTrain.set_driver(prop.passenger)
+				else
+					NewTrain.set_driver(prop.passenger.player)
+				end
+			end
+			
+			NewTrain.train.speed = math.abs(prop.train.speed)
+			
+			NewTrain.backer_name = prop.train.backer_name
+			NewTrain.color = prop.train.color
+			NewTrain.train.manual_mode = prop.train.train.manual_mode
+			
+			NewTrain.schedule = prop.train.train.schedule
+			NewTrain.burner.currently_burning = prop.burner.currently_burning
+			NewTrain.burner.remaining_burning_fuel = prop.burner.remaining_burning_fuel
+			
+			for FuelName, quantity in pairs(prop.get_fuel_inventory().get_contents()) do
+				NewTrain.get_fuel_inventory().insert({name = FuelName, count = quantity})
+			end
+			
+			remote.call("logistic-train-network", "reassign_delivery", prop.TempTrain.train.id, NewTrain)
+			
+			prop.head_escaped = true
+			prop.GuideCar.destroy()
+			prop.TempTrain.destroy()
+			if len(prop.train.carriages == 1) then
+				prop = nil
+			else
+				prop.escape_done = false
+			end
+			
 		--fail
 		else
+			prop.GuideCar.destroy()
+			prop.TempTrain.destroy()
+			prop = nil
+		end
 	end
 end
 
