@@ -1,0 +1,3 @@
+Pair tunnels depending on the position whenever it is placed
+
+teleport entered train as ghost to the destination

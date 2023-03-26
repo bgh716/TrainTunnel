@@ -149,17 +149,18 @@ local function entity_damaged(event)
 			
 			prop.head_escaped = true
 			prop.GuideCar.destroy()
-			prop.TempTrain.destroy()
 			if len(prop.train.carriages == 1) then
 				prop = nil
 			else
 				prop.escape_done = false
+				prop.pos = pos
+				prop.train = NewTrain
+				prop.num = 2
 			end
 			
 		--fail
 		else
 			prop.GuideCar.destroy()
-			prop.TempTrain.destroy()
 			prop = nil
 		end
 	end

@@ -18,3 +18,7 @@ script.on_event(
 	require("script.train_entered")
 )
 
+script.on_nth_tick(
+	1,
+	require("script.event.on_tick")
+)
