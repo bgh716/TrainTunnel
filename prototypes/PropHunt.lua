@@ -2,11 +2,7 @@ local function makeGhost(name)
 	local T = table.deepcopy(data.raw.car["car"])
 	T.name = name
 	T.flags = {"placeable-off-grid", "not-blueprintable", "not-deconstructable", "hidden", "not-selectable-in-game"}
-	if name == "PropCarT1" then
-		T.collision_mask = {"T2"}
-	elseif name == "PropCarT2" then
-		T.collision_mask = {"T1"}
-	end
+	T.collision_mask = {"layer-55"}
 	T.selectable_in_game = false
 	T.corpse = nil
 	T.energy_source ={type = "void"}
@@ -45,7 +41,6 @@ local function makeGhost(name)
 		icon = "__TrainTunnel__/graphics/Untitled.png",
 		icon_size = 32,
 		flags = {"hidden"},
-		subgroup = "RT",
 		order = "c",
 		place_result = name,
 		stack_size = 50

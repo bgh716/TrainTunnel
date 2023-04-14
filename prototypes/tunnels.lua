@@ -8,7 +8,6 @@ local function makeTunnelItem(name, icon, placerEntity)
 		name = name,
 		icon = icon,
 		icon_size = 64,
-		subgroup = "RT",
 		order = "g",
 		place_result = placerEntity,
 		stack_size = 10
@@ -48,11 +47,6 @@ local function makeTunnelEntity(name, icon, pictureFileName, placerItem)
 			  percent = impact
 			}
 		}
-	
-	if name == "TrainTunnelT1" then
-	  collisionM = {"train-layer","T1"}
-	elseif name == "TrainTunnel2" then
-	  collisionM = {"train-layer","T2"}
 
 	return {
 		type = "simple-entity-with-owner", -- Simplist entity that has 4 diections of sprites
@@ -66,7 +60,7 @@ local function makeTunnelEntity(name, icon, pictureFileName, placerItem)
 		selection_box = {{-0.01, -1.6}, {2, 2.4}},
 		selection_priority = 100,
 		collision_box = {{-0.01, -1.5}, {1.9, 2.4}},
-		collision_mask = collisionM,
+		collision_mask = {"train-layer","layer-55"},
 		render_layer = "lower-object-above-shadow",
 		picture = {
 			-- Shifts are inverted because the sprites are pre-shifted to be at the ramp position already

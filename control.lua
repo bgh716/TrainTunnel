@@ -20,5 +20,5 @@ script.on_event(
 
 script.on_nth_tick(
 	1,
-	require("script.event.on_tick")
+	require("script.on_tick")
 )
