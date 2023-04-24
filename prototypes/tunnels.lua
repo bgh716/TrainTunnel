@@ -57,7 +57,7 @@ local function makeTunnelEntity(name, icon, pictureFileName, placerItem)
 		minable = {mining_time = 0.5, result = placerItem},
 		max_health = HP,
 		render_layer = "higher-object-under",
-		selection_box = {{-0.01, -1.6}, {2, 2.4}},
+		selection_box = {{-0.01, -1.6}, {2, 8.5}},
 		selection_priority = 100,
 		collision_box = {{-0.01, -1.5}, {1.9, 2.4}},
 		collision_mask = {"train-layer","layer-55"},
@@ -98,6 +98,41 @@ local function makeTunnelEntity(name, icon, pictureFileName, placerItem)
 	}
 end
 
+local function makeDumpEntity(name, icon, pictureFileName, placerItem)
+
+	local impact = 100
+	local HP = 500
+	local resists =
+		{
+			{
+			  type = "impact",
+			  percent = impact
+			}
+		}
+
+	return {
+		type = "simple-entity-with-owner", -- Simplist entity that has 4 diections of sprites
+		name = name,
+		icon = icon,
+		icon_size = 64,
+		flags = {"player-creation", "hidden", "not-on-map","not-selectable-in-game","not-deconstructable"},
+		max_health = HP,
+		render_layer = "higher-object-under",
+		selection_box = {{-0.01, -0.01}, {0.01, 0.01}},
+		selection_priority = 100,
+		collision_box = {{-0.01, -0.01}, {2, 8.5}},
+		collision_mask = {"player-layer"},
+		render_layer = "lower-object-above-shadow",
+		pictures = {
+			direction_count = 1,
+			filename = "__core__/graphics/empty.png",
+			width = 1,
+			height = 1
+		},
+		resistances = resists
+	}
+end
+
 local function makeTunnelPrototypes(baseName)
 	local iconFilename = '__TrainTunnel__/graphics/TrainRamp/' .. baseName .. '-icon.png'
 	local entityPictureFilename =  '__TrainTunnel__/graphics/TrainRamp/' .. baseName .. '.png'
@@ -125,6 +160,13 @@ local function makeTunnelPrototypes(baseName)
 			baseName,
 			iconFilename,
 			entityPictureFilename,
+			itemName
+		),
+
+		makeDumpEntity(
+			baseName .. '-dump',
+			iconFilename,
+			"__core__/graphics/empty.png",
 			itemName
 		)
 	}

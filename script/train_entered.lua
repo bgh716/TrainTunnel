@@ -1,4 +1,6 @@
 local constants = require("__TrainTunnel__/script/constants")
+local util = require("util")
+local math2d = require('math2d')
 
 local function entity_damaged(event)
 	--train entering tunnel
@@ -17,57 +19,48 @@ local function entity_damaged(event)
 		) then
 		--verify collision angle
 		if event.entity.orientation == 0 and event.entity.position.y-event.cause.position.y>0 then
-			area1 = {x=0,y=4}
-			area2 = {x=0,y=5}
+			area = {x=0,y=5}
 		elseif event.entity.orientation == 0.25 and event.entity.position.x-event.cause.position.x<0 then
-			area1 = {x=-4,y=0}
-			area2 = {x=-5,y=0}
+			area = {x=-5,y=0}
 		elseif event.entity.orientation == 0.50 and event.entity.position.y-event.cause.position.y<0 then
-			area1 = {x=0,y=-4}
-			area2 = {x=0,y=-5}
+			area = {x=0,y=-5}
 		elseif event.entity.orientation == 0.75 and event.entity.position.x-event.cause.position.x>0 then
-			area1 = {x=4,y=0}
-			area2 = {x=5,y=0}
+			area = {x=5,y=0}
 		end
 		
+		--create ghost train to save the LTN schedule
+		TempTrain = event.entity.surface.create_entity
+				({
+					name = "ghostLocomotive",
+					position = math2d.position.add(event.entity.position,area),
+					force = event.cause.force
+				})
 		
-		
+		TempTrain.destructible = false
+		remote.call("logistic-train-network", "reassign_delivery", event.cause.train.id, TempTrain.train)
 		
 		--create proper ghostcar to bump other side
 		if event.entity.name == "TrainTunnelT1" then
 			SpookyGhost = event.entity.surface.create_entity
 				({
 					name = "PropCarT1",
-					position = {event.entity.position.x + area1.x,event.entity.position.y + area1.y},
-					force = event.cause.force
+					position = math2d.position.add(event.entity.position,area),
+					force = event.cause.force,
 				})
 			target = "TrainTunnelT2"
 		elseif event.entity.name == "TrainTunnelT2" then
 			SpookyGhost = event.entity.surface.create_entity
 				({
 					name = "PropCarT2",
-					position = {event.entity.position.x + area1.x,event.entity.position.y + area1.y},
-					force = event.cause.force
+					position = math2d.position.add(event.entity.position,area),
+					force = event.cause.force,
 				})
 			target = "TrainTunnelT1"
 		end
 		
-		for i=1,Constants.TUNNEL_DETECTION_RANGE,1 do
-			opo_tunnel = event.entity.surface.find_entity(target,{event.entity.position.x + area1.x*i,event.entity.position.y + area1.y*i})
-			if	opo_tunnel then
-				opo_tunnel_pos = {event.entity.position.x + area1.x*(i+3),event.entity.position.y + area1.y*(i+3)}
-				break
-			end
-		end
-		
-		if opo_tunnel == nil then
-			SpookyGhost.destroy()
-			return
-		end
-		
 		SpookyGhost.orientation = event.cause.orientation
 		SpookyGhost.operable = false
-		SpookyGhost.speed = event.cause.speed
+		SpookyGhost.speed = 0.75--event.cause.speed
 		SpookyGhost.destructible = false
 
 
@@ -92,6 +85,7 @@ local function entity_damaged(event)
 		if #event.cause.train.carriages > 1 then
 			global.TrainsInTunnel[SpookyGhost.unit_number].carriages = {}
 			for i=2,#event.cause.train.carriages,1 do
+				event.cause.train.carriages[i].train.speed = event.cause.speed
 				global.TrainsInTunnel[SpookyGhost.unit_number].carriages[i]={}
 				if event.cause.train.carriages[i].type == "cargo-wagon" then
 					global.TrainsInTunnel[SpookyGhost.unit_number].carriages[i].type = "cargo-wagon"
@@ -116,21 +110,13 @@ local function entity_damaged(event)
 		
 
 		
-		
-		--create ghost train to save the LTN schedule
-		TempTrain = event.entity.surface.create_entity
-				({
-					name = "ghostLocomotive",
-					position = {event.entity.position.x+area2.x,event.entity.position.y+area2.y},
-					force = event.cause.force
-				})
-		TempTrain.destructible = false
-		
-		remote.call("logistic-train-network", "reassign_delivery", event.cause.train.id, TempTrain.train)
-		global.TrainsInTunnel[SpookyGhost.unit_number].TempTrain  = TempTrain
+			
 		
 		--destroy current train
 		event.cause.destroy({ raise_destroy = true })
+		global.TrainsInTunnel[SpookyGhost.unit_number].TempTrain  = TempTrain
+		
+		
 
 
 	--carriages entering tunnel
@@ -219,6 +205,7 @@ local function entity_damaged(event)
 			if prop.len_carriages == 1 then
 				prop.escape_done = true
 			else
+				prop.tick = false
 				prop.escape_done = false
 				prop.pos = pos
 				prop.train = NewTrain

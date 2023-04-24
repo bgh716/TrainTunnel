@@ -8,6 +8,12 @@ Constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION[defines.direction.east]  = {  0.5,  
 Constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION[defines.direction.south] = { -0.5,  0.5 }
 Constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION[defines.direction.west]  = { -0.5, -0.5 }
 
+Constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION_IMAGE = {}
+Constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION_IMAGE[defines.direction.north] = {  0.5, -1.5 }
+Constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION_IMAGE[defines.direction.east]  = {  1.5,  0.5 }
+Constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION_IMAGE[defines.direction.south] = { -0.5,  1.5 }
+Constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION_IMAGE[defines.direction.west]  = { -1.5, -0.5 }
+
 -- Same as above but keyed by orientation
 Constants.PLACER_TO_RAMP_SHIFT_BY_ORIENTATION = {}
 Constants.PLACER_TO_RAMP_SHIFT_BY_ORIENTATION[0] = Constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION[defines.direction.north]

@@ -2,6 +2,7 @@ local function on_tick(event)
 	index = 1
 	for unit,prop in pairs(global.TrainsInTunnel) do
 		if prop.escape_done == false and prop.head_escaped == true then
+			
 			NewCarriage = prop.train.surface.create_entity({
 						name = prop.carriages[prop.num].type,
 						position = prop.pos,
@@ -9,9 +10,8 @@ local function on_tick(event)
 						force = prop.train.force,
 						raise_built = true
 					})
-			if (NewCarriage ~= nil) then
+			if prop.tick == true and (NewCarriage ~= nil) then
 				NewCarriage.connect_rolling_stock(defines.rail_direction.front)
-				NewCarriage.connect_rolling_stock(defines.rail_direction.back)
 				prop.train.train.manual_mode = prop.manual_mode
 				if (NewCarriage.type == "cargo-wagon") then
 					NewCarriage.get_inventory(defines.inventory.cargo_wagon).set_bar(prop.carriages[prop.num].bar)
@@ -30,8 +30,12 @@ local function on_tick(event)
 				if prop.len_carriages == prop.num then
 					prop.escape_done = true
 				else
+					prop.tick = false
 					prop.num = prop.num + 1
 				end
+			elseif prop.tick == false and (NewCarriage ~= nil) then
+				prop.tick = true
+				NewCarriage.destroy()
 			end
 		elseif prop.escape_done == true and prop.head_escaped == true then
 			table.remove(global.TrainsInTunnel,index)
