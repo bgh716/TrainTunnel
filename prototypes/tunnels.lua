@@ -59,7 +59,7 @@ local function makeTunnelEntity(name, icon, pictureFileName, placerItem)
 		render_layer = "higher-object-under",
 		selection_box = {{-0.01, -1.6}, {2, 8.5}},
 		selection_priority = 100,
-		collision_box = {{-0.01, -1.5}, {1.9, 2.4}},
+		collision_box = {{-0.01, -0.0}, {1.9, 1.9999999}},
 		collision_mask = {"train-layer","layer-55"},
 		render_layer = "lower-object-above-shadow",
 		picture = {

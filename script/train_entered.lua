@@ -3,6 +3,9 @@ local util = require("util")
 local math2d = require('math2d')
 
 local function entity_damaged(event)
+	if (event.cause.type == "locomotive") then
+		game.print("cause all: " .. event.cause.train.id)
+	end
 	--train entering tunnel
 	if (
 		string.find(event.entity.name, "TrainTunnel")
@@ -17,26 +20,34 @@ local function entity_damaged(event)
 			or event.entity.orientation == 0.75 and event.entity.position.x-event.cause.position.x>0
 			)
 		) then
+		game.print("cause specific0: " .. event.cause.train.id)
 		--verify collision angle
+		range = 5
 		if event.entity.orientation == 0 and event.entity.position.y-event.cause.position.y>0 then
-			area = {x=0,y=5}
+			area = {x=0,y=range}
 		elseif event.entity.orientation == 0.25 and event.entity.position.x-event.cause.position.x<0 then
-			area = {x=-5,y=0}
+			area = {x=-range,y=0}
 		elseif event.entity.orientation == 0.50 and event.entity.position.y-event.cause.position.y<0 then
-			area = {x=0,y=-5}
+			area = {x=0,y=-range}
 		elseif event.entity.orientation == 0.75 and event.entity.position.x-event.cause.position.x>0 then
-			area = {x=5,y=0}
+			area = {x=range,y=0}
 		end
-		
+
+		game.print("cause specific1: " .. event.cause.train.id)
 		--create ghost train to save the LTN schedule
+		
 		TempTrain = event.entity.surface.create_entity
 				({
-					name = "ghostLocomotive",
+					name = "ghostLocomotiveTT",
 					position = math2d.position.add(event.entity.position,area),
-					force = event.cause.force
+					force = event.cause.force,
+					raise_built = false
 				})
-		
+		game.print("cause specific1-1: " .. event.cause.train.id)
 		TempTrain.destructible = false
+		game.print("temp: " .. TempTrain.train.id)
+		game.print("cause specific2: " .. event.cause.train.id)
+
 		remote.call("logistic-train-network", "reassign_delivery", event.cause.train.id, TempTrain.train)
 		
 		--create proper ghostcar to bump other side
