@@ -61,7 +61,7 @@ local function makeTunnelEntity(name, icon, pictureFileName, placerItem)
 		selection_priority = 100,
 		collision_box = {{-0.01, -1.5}, {1.9, 2.4}},
 		collision_mask = {"train-layer","layer-55"},
-		render_layer = "lower-object-above-shadow",
+		render_layer = "higher-object-above",
 		picture = {
 			-- Shifts are inverted because the sprites are pre-shifted to be at the ramp position already
 			north = {
