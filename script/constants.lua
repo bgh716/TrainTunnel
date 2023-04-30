@@ -1,5 +1,7 @@
 Constants = {}
 
+Constants.GHOST_SPEED = 0.75
+
 -- How much we shift the placer position (in tiles) to get
 -- the position of the ramp entity based on the placer's direction
 Constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION = {}
@@ -22,5 +24,6 @@ Constants.PLACER_TO_RAMP_SHIFT_BY_ORIENTATION[0.50] = Constants.PLACER_TO_RAMP_S
 Constants.PLACER_TO_RAMP_SHIFT_BY_ORIENTATION[0.75] = Constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION[defines.direction.west]
 
 Constants.TUNNEL_DETECTION_RANGE = 100
+Constants.TRAIN_DETECTION_RANGE = 2
 
 return Constants

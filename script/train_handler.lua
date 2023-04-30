@@ -35,8 +35,8 @@ local function handleTrainTunnelPlacerBuilt(entity, player)
 			dump.destroy()
 		end
 	else
-		global.TrainsInTunnel[tunnel.unit_number] = {}
-		global.TrainsInTunnel[tunnel.unit_number].dump = dump
+		global.Tunnels[tunnel.unit_number] = {}
+		global.Tunnels[tunnel.unit_number].dump = dump
 		entity.destroy({raise_destroy = true})
 	end
 end
