@@ -14,6 +14,15 @@ script.on_event(
 )
 
 script.on_event(
+	{
+		defines.events.on_entity_destroyed,
+		defines.events.on_robot_mined_entity,
+		defines.events.on_player_mined_entity,
+	},
+	require("script.entity_destroyed")
+)
+
+script.on_event(
 	defines.events.on_entity_damaged,
 	require("script.train_entered")
 )
