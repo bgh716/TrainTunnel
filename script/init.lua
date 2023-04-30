@@ -6,6 +6,10 @@ local function on_int()
 		global.TrainsInTunnel = {}
   end
   
+  if global.Tunnels == nil then
+		global.Tunnels = {}
+  end
+
   if global.OrientationUnitComponents == nil then
 		global.OrientationUnitComponents = {}
 		global.OrientationUnitComponents[0] = {x = 0, y = -1, name = "up"}
