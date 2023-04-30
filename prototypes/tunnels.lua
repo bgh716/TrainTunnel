@@ -29,8 +29,8 @@ local function makeTunnelPlacerEntity(name, icon, pictureFileName, placerItem)
 		selection_box = {{-0.01, -2.35}, {2.25, 1.30}},
 		animation = {
 			filename = pictureFileName,
-			width = 200,
-			height = 200,
+			width = 500,
+			height = 500,
 			frame_count = 1,
 			direction_count = 4
 		}
@@ -61,36 +61,36 @@ local function makeTunnelEntity(name, icon, pictureFileName, placerItem)
 		selection_priority = 100,
 		collision_box = {{-0.01, -0.01}, {1.9, 0.01}},
 		collision_mask = {"train-layer","layer-55"},
-		render_layer = "lower-object-above-shadow",
+		render_layer = "higher-object-above",
 		picture = {
 			-- Shifts are inverted because the sprites are pre-shifted to be at the ramp position already
 			north = {
 				filename = pictureFileName,
-				width = 200,
-				height = 200,
+				width = 500,
+				height = 500,
 				y = 0,
-				shift = util.mul_shift(constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION[defines.direction.north], -1)
+				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.north], -1)
 			},
 			east = {
 				filename = pictureFileName,
-				width = 200,
-				height = 200,
-				y = 200,
-				shift = util.mul_shift(constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION[defines.direction.east], -1)
+				width = 500,
+				height = 500,
+				y = 500,
+				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.east], -1)
 			},
 			south = {
 				filename = pictureFileName,
-				width = 200,
-				height = 200,
-				y = 400,
-				shift = util.mul_shift(constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION[defines.direction.south], -1)
+				width = 500,
+				height = 500,
+				y = 1000,
+				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.south], -1)
 			},
 			west = {
 				filename = pictureFileName,
-				width = 200,
-				height = 200,
-				y = 600,
-				shift = util.mul_shift(constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION[defines.direction.west], -1)
+				width = 500,
+				height = 500,
+				y = 1500,
+				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.west], -1)
 			},
 		},
 		placeable_by = { item = placerItem, count = 1 }, -- Controls `q` and blueprint behavior
