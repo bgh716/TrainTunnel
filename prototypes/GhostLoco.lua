@@ -7,8 +7,9 @@ data:extend{
 		icon = baseLoco.icon,
 		icon_size = 64, icon_mipmaps = 4,
 		flags = {"placeable-neutral", "placeable-off-grid", "not-on-map", "hidden", "not-selectable-in-game"},
-		collision_box = {{-0.6, -0.2}, {0.6, 0.2}},--baseLoco.collision_box, {{-0.6, -2.6}, {0.6, 2.6}}
-		map_generator_bounding_box = {{-0.6, -0.2}, {0.6, 0.2}},
+		collision_box = {{-0.01, -0.2}, {0.01, 0.2}},--baseLoco.collision_box, {{-0.6, -2.6}, {0.6, 2.6}}
+		map_generator_bounding_box = {{-0.01, -0.2}, {0.01, 0.2}},
+		selection_box = {{-0.01, -0.2}, {0.01, 0.2}},
 		collision_mask = {"train-layer"},
 		max_health = 1,
 		weight = 0.000000001,

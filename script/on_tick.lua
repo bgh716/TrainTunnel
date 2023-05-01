@@ -15,7 +15,7 @@ local function detect_train(prop,range)
 	entities = prop.guideCar.surface.find_entities({left_top,right_down})
 	
 	for index, value in ipairs(entities) do
-		if	"locomotive" == value.name or "cargo-wagon" == value.name or "fluid-wagon" == value.name then
+		if	"locomotive" == value.name or "cargo-wagon" == value.name or "fluid-wagon" == value.name then --maybe add car, tank and player
 			return true
 		end
 	end
@@ -31,7 +31,7 @@ local function load_train(prop)
 			force = prop.guideCar.force,
 			raise_built = true
 			})
-	if NewTrain then
+	if NewTrain ~= nil then
 
 		NewTrain.train.speed = 0.5			
 		NewTrain.backer_name = prop.backer_name
@@ -59,7 +59,7 @@ local function load_carriage(prop)
 			force = prop.train.force,
 			raise_built = true
 			})
-	if NewCarriage then
+	if NewCarriage ~= nil then
 
 		NewCarriage.connect_rolling_stock(defines.rail_direction.front)
 		prop.train.train.manual_mode = prop.manual_mode

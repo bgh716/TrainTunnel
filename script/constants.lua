@@ -10,6 +10,18 @@ Constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION[defines.direction.east]  = {  0.5,  
 Constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION[defines.direction.south] = { -0.5,  0.5 }
 Constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION[defines.direction.west]  = { -0.5, -0.5 }
 
+Constants.PLACER_TO_WALL_SHIFT_BY_DIRECTION = {}
+Constants.PLACER_TO_WALL_SHIFT_BY_DIRECTION[defines.direction.north] = {  2.2, -0.5 }
+Constants.PLACER_TO_WALL_SHIFT_BY_DIRECTION[defines.direction.east]  = {  0.5,  2.2 }
+Constants.PLACER_TO_WALL_SHIFT_BY_DIRECTION[defines.direction.south] = { -2.2,  0.5 }
+Constants.PLACER_TO_WALL_SHIFT_BY_DIRECTION[defines.direction.west]  = { -0.5, -2.2 }
+
+Constants.PLACER_TO_BLOCK_SHIFT_BY_DIRECTION = {}
+Constants.PLACER_TO_BLOCK_SHIFT_BY_DIRECTION[defines.direction.north] = {  0.5, 5.5 }
+Constants.PLACER_TO_BLOCK_SHIFT_BY_DIRECTION[defines.direction.east]  = {  -6.2,  0.5 }
+Constants.PLACER_TO_BLOCK_SHIFT_BY_DIRECTION[defines.direction.south] = { -0.5,  -5.5 }
+Constants.PLACER_TO_BLOCK_SHIFT_BY_DIRECTION[defines.direction.west]  = { 6.2, -0.5 }
+
 -- set position for images
 Constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION = {}
 Constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.north] = {  -1, -0.5 }
