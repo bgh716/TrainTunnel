@@ -1,4 +1,5 @@
 local math2d = require('math2d')
+local constants = require('constants')
 
 local function detect_train(prop,range)
 	temp = {x=-1,y=-range}
@@ -15,7 +16,7 @@ local function detect_train(prop,range)
 	entities = prop.guideCar.surface.find_entities({left_top,right_down})
 	
 	for index, value in ipairs(entities) do
-		if	"locomotive" == value.name or "cargo-wagon" == value.name or "fluid-wagon" == value.name then
+		if	"locomotive" == value.name or "cargo-wagon" == value.name or "fluid-wagon" == value.name then --maybe add car, tank and player
 			return true
 		end
 	end
@@ -31,7 +32,7 @@ local function load_train(prop)
 			force = prop.guideCar.force,
 			raise_built = true
 			})
-	if NewTrain then
+	if NewTrain ~= nil then
 
 		NewTrain.train.speed = 0.5			
 		NewTrain.backer_name = prop.backer_name
@@ -59,7 +60,7 @@ local function load_carriage(prop)
 			force = prop.train.force,
 			raise_built = true
 			})
-	if NewCarriage then
+	if NewCarriage ~= nil then
 
 		NewCarriage.connect_rolling_stock(defines.rail_direction.front)
 		prop.train.train.manual_mode = prop.manual_mode
@@ -84,10 +85,12 @@ local function load_carriage(prop)
 	return NewCarriage
 end
 
-local function on_tick(event)
+local function train_handler(event)
 	index = 1
 	for unit,prop in pairs(global.TrainsInTunnel) do
-
+		if prop == nil then
+			table.remove(global.TrainsInTunnel,index)
+		end
 		if prop.escape_done == true and prop.head_escaped == true then
 			prop.guideCar.destroy()
 			prop.TempTrain.destroy()
@@ -143,6 +146,32 @@ local function on_tick(event)
 		index = index + 1
 		::continue::
 	end
+end
+
+local function paring_handler(event)
+	local dst = player or game
+	index = 1
+	for unit,prop in pairs(global.Paring) do
+		if prop == nil then
+			table.remove(global.Paring,index)
+		end
+		if prop.timer >= constants.PARING_TIMEOUT then
+			if global.Tunnels[unit] ~= nil then
+				global.Tunnels[unit].paring = false
+			end
+			table.remove(global.Paring,index)
+			prop = nil
+			dst.print("paring timed out")
+		else
+			prop.timer = prop.timer + 1
+		end
+		index = index + 1
+	end
+end
+
+local function on_tick(event)
+	train_handler(event)
+	paring_handler(event)
 end
 
 return on_tick

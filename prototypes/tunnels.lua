@@ -53,14 +53,52 @@ local function makeTunnelEntity(name, icon, pictureFileName, placerItem)
 		name = name,
 		icon = icon,
 		icon_size = 64,
-		flags = {"player-creation", "hidden", "not-on-map"},
-		minable = {mining_time = 0.5, result = placerItem},
+		flags = {"player-creation", "hidden", "not-on-map","not-selectable-in-game","not-deconstructable"},
+		
 		max_health = HP,
 		render_layer = "higher-object-under",
-		selection_box = {{-0.01, -1.6}, {2, 8.5}},
+		selection_box = {{-0.01, -0.01}, {1.9, 0.01}},
 		selection_priority = 100,
 		collision_box = {{-0.01, -0.01}, {1.9, 0.01}},
 		collision_mask = {"train-layer","layer-55"},
+		render_layer = "lower-object-above-shadow",
+		pictures = {
+			direction_count = 1,
+			filename = "__core__/graphics/empty.png",
+			width = 1,
+			height = 1
+		},
+		
+		
+		resistances = resists
+	}
+end
+
+local function makeEntranceMaskEntity(name, icon, pictureFileName, placerItem)
+
+	local impact = 100
+	local HP = 500
+	local resists =
+		{
+			{
+			  type = "impact",
+			  percent = impact
+			}
+		}
+
+	return {
+		type = "simple-entity-with-owner", -- Simplist entity that has 4 diections of sprites
+		name = name,
+		icon = icon,
+		icon_size = 64,
+		flags = {"player-creation", "hidden", "not-on-map"},
+		max_health = HP,
+		minable = {mining_time = 0.5, result = placerItem},
+		render_layer = "higher-object-under",
+		selection_box = {{-0.01, -3}, {2, 6.5}},
+		selection_priority = 100,
+		collision_box = {{-0.01, -3}, {2, 6.5}},
+		collision_mask = {},
 		render_layer = "higher-object-above",
 		picture = {
 			-- Shifts are inverted because the sprites are pre-shifted to be at the ramp position already
@@ -69,28 +107,98 @@ local function makeTunnelEntity(name, icon, pictureFileName, placerItem)
 				width = 500,
 				height = 500,
 				y = 0,
-				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.north], -1)
+				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.north], -1),
+				scale = 1.5
 			},
 			east = {
 				filename = pictureFileName,
 				width = 500,
 				height = 500,
 				y = 500,
-				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.east], -1)
+				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.east], -1),
+				scale = 1.5
 			},
 			south = {
 				filename = pictureFileName,
 				width = 500,
 				height = 500,
 				y = 1000,
-				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.south], -1)
+				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.south], -1),
+				scale = 1.5
 			},
 			west = {
 				filename = pictureFileName,
 				width = 500,
 				height = 500,
 				y = 1500,
-				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.west], -1)
+				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.west], -1),
+				scale = 1.5
+			},
+		},
+		placeable_by = { item = placerItem, count = 1 }, -- Controls `q` and blueprint behavior
+		resistances = resists
+	}
+end
+
+local function makeExitMaskEntity(name, icon, pictureFileName, placerItem)
+
+	local impact = 100
+	local HP = 500
+	local resists =
+		{
+			{
+			  type = "impact",
+			  percent = impact
+			}
+		}
+
+	return {
+		type = "simple-entity-with-owner", -- Simplist entity that has 4 diections of sprites
+		name = name,
+		icon = icon,
+		icon_size = 64,
+		flags = {"player-creation", "hidden", "not-on-map"},
+		max_health = HP,
+		minable = {mining_time = 0.5, result = placerItem},
+		render_layer = "higher-object-under",
+		selection_box = {{-0.01, -3}, {2, 6.5}},
+		selection_priority = 100,
+		collision_box = {{-0.01, -3}, {2, 6.5}},
+		collision_mask = {},
+		render_layer = "higher-object-above",
+		picture = {
+			-- Shifts are inverted because the sprites are pre-shifted to be at the ramp position already
+			north = {
+				filename = pictureFileName,
+				width = 500,
+				height = 500,
+				y = 0,
+				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.north], -1),
+				scale = 1.5
+			},
+			east = {
+				filename = pictureFileName,
+				width = 500,
+				height = 500,
+				y = 500,
+				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.east], -1),
+				scale = 1.5
+			},
+			south = {
+				filename = pictureFileName,
+				width = 500,
+				height = 500,
+				y = 1000,
+				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.south], -1),
+				scale = 1.5
+			},
+			west = {
+				filename = pictureFileName,
+				width = 500,
+				height = 500,
+				y = 1500,
+				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.west], -1),
+				scale = 1.5
 			},
 		},
 		placeable_by = { item = placerItem, count = 1 }, -- Controls `q` and blueprint behavior
@@ -120,8 +228,78 @@ local function makeDumpEntity(name, icon, pictureFileName, placerItem)
 		render_layer = "higher-object-under",
 		selection_box = {{-0.01, -0.01}, {0.01, 0.01}},
 		selection_priority = 100,
-		collision_box = {{-0.01, -0.01}, {2, 8.5}},
+		collision_box = {{-0.01, -0.01}, {2, 6.5}},
 		collision_mask = {"player-layer"},
+		render_layer = "lower-object-above-shadow",
+		pictures = {
+			direction_count = 1,
+			filename = "__core__/graphics/empty.png",
+			width = 1,
+			height = 1
+		},
+		resistances = resists
+	}
+end
+
+local function makeWallEntity(name, icon, pictureFileName, placerItem)
+
+	local impact = 100
+	local HP = 500
+	local resists =
+		{
+			{
+			  type = "impact",
+			  percent = impact
+			}
+		}
+
+	return {
+		type = "simple-entity-with-owner", -- Simplist entity that has 4 diections of sprites
+		name = name,
+		icon = icon,
+		icon_size = 64,
+		flags = {"player-creation", "hidden", "not-on-map","not-selectable-in-game","not-deconstructable"},
+		max_health = HP,
+		render_layer = "higher-object-under",
+		selection_box = {{-0.01, -0.01}, {0.01, 0.01}},
+		selection_priority = 100,
+		collision_box = {{-0.01, -0.01}, {1, 6.5}},
+		collision_mask = {"rail-layer"},
+		render_layer = "lower-object-above-shadow",
+		pictures = {
+			direction_count = 1,
+			filename = "__core__/graphics/empty.png",
+			width = 1,
+			height = 1
+		},
+		resistances = resists
+	}
+end
+
+local function makeBlockEntity(name, icon, pictureFileName, placerItem)
+
+	local impact = 100
+	local HP = 500
+	local resists =
+		{
+			{
+			  type = "impact",
+			  percent = impact
+			}
+		}
+
+	return {
+		type = "simple-entity-with-owner", -- Simplist entity that has 4 diections of sprites
+		name = name,
+		icon = icon,
+		icon_size = 64,
+		flags = {"player-creation", "hidden", "not-on-map","not-selectable-in-game","not-deconstructable"},
+		max_health = HP,
+		render_layer = "higher-object-under",
+		selection_box = {{-0.01, -0.01}, {0.01, 0.01}},
+		selection_priority = 100,
+		collision_box = {{-0.01, -0.01}, {1.9, 0.01}},
+		collision_mask = {"train-layer"},
 		render_layer = "lower-object-above-shadow",
 		pictures = {
 			direction_count = 1,
@@ -159,7 +337,7 @@ local function makeTunnelPrototypes(baseName)
 		makeTunnelEntity(
 			baseName,
 			iconFilename,
-			entityPictureFilename,
+			"__core__/graphics/empty.png",
 			itemName
 		),
 
@@ -167,6 +345,27 @@ local function makeTunnelPrototypes(baseName)
 			baseName .. '-dump',
 			iconFilename,
 			"__core__/graphics/empty.png",
+			itemName
+		),
+
+		makeWallEntity(
+			baseName .. '-wall',
+			iconFilename,
+			"__core__/graphics/empty.png",
+			itemName
+		),
+
+		makeEntranceMaskEntity(
+			baseName .. '-entrance',
+			iconFilename,
+			entityPictureFilename,
+			itemName
+		),
+
+		makeExitMaskEntity(
+			baseName .. '-exit',
+			iconFilename,
+			entityPictureFilename,
 			itemName
 		)
 	}

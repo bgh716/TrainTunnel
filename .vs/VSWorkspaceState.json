@@ -1,8 +1,11 @@
 {
   "ExpandedNodes": [
     "",
+    "\\locale",
+    "\\locale\\en",
     "\\prototypes",
     "\\script"
   ],
+  "SelectedNode": "\\prototypes\\click.lua",
   "PreviewInSolutionExplorer": false
 }

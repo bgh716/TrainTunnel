@@ -31,3 +31,13 @@ script.on_nth_tick(
 	1,
 	require("script.on_tick")
 )
+
+script.on_event(
+	"paring",
+	require("script.paring")
+)
+
+script.on_event(
+	"test",
+	require("script.testing")
+)
