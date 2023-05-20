@@ -18,6 +18,8 @@ script.on_event(
 		defines.events.on_entity_destroyed,
 		defines.events.on_robot_mined_entity,
 		defines.events.on_player_mined_entity,
+		defines.events.on_player_deconstructed_area,
+		defines.events.on_marked_for_deconstruction,
 	},
 	require("script.entity_destroyed")
 )
@@ -30,4 +32,16 @@ script.on_event(
 script.on_nth_tick(
 	1,
 	require("script.on_tick")
+)
+
+script.on_event(
+	"pairing",
+	require("script.pairing")
+)
+
+script.on_event(
+	{
+		"cancel-pairing",
+	},
+	require("script.cancel_pairing")
 )

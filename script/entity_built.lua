@@ -1,4 +1,4 @@
-local trainHandler = require("train_handler")
+local tunnelHandler = require("tunnel_builder")
 
 local function entity_built(event)
 	local entity = event.created_entity or event.entity or event.destination
@@ -11,7 +11,8 @@ local function entity_built(event)
 		player = event.robot.last_user
 	end
 
-	if trainHandler(entity, player) then
+
+	if tunnelHandler(entity, player) then
 		return
 	end
 

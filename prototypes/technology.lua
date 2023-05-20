@@ -1,5 +1,3 @@
-
-
 data:extend({
   {
     type = "technology",
@@ -14,10 +12,6 @@ data:extend({
 			type = "unlock-recipe",
 			recipe = "TrainTunnelT1Recipe"
 	  },
-	  {
-			type = "unlock-recipe",
-			recipe = "TrainTunnelT2Recipe"
-	  }
     },
     unit =
     {

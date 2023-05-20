@@ -1,6 +1,16 @@
 local constants = require("__TrainTunnel__/script/constants")
 local util = require("util")
 local math2d = require('math2d')
+--local math = require('math')
+
+local function find_mask(tunnel)
+	for unit,prop in pairs(global.Tunnels) do
+		if prop.tunnel.unit_number == tunnel.unit_number then
+			return unit
+		end
+	end
+	return nil
+end
 
 local function get_area(event, range)
 	if event.entity.orientation == 0 and event.entity.position.y-event.cause.position.y>0 then return true, {x=0,y=range}
@@ -12,19 +22,24 @@ local function get_area(event, range)
 end
 
 local function collision_check(event, range)
+	mask = find_mask(event.entity)
 	if (
-		string.find(event.entity.name, "TrainTunnel")
-		and event.cause
-		and (math.abs(event.entity.orientation-event.cause.orientation) == 0.5
-			or math.abs(event.entity.orientation-event.cause.orientation) == 0) -- collision angle is 180
+		event.cause
+		and event.entity.name == "TrainTunnelT1" and global.Tunnels[mask] ~= nil
+		and global.Tunnels[mask].paired == true
+		and global.Tunnels[mask].train == nil
+		or (global.Tunnels[mask].train ~= nil and (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon"))
 	) then 
-		return get_area(event, range) --collision direction check + area
+		entrance = mask
+		exit = global.Tunnels[mask].paired_to
+		valid, area = get_area(event, range)
+		return valid, area, entrance, exit --collision direction check + area
 	else
 		return false
 	end
 end
 
-local function create_temp_train(event,position)
+local function create_temp_train(event,position,type)
 	TempTrain = event.entity.surface.create_entity
 				({
 					name = "ghostLocomotiveTT",
@@ -34,29 +49,77 @@ local function create_temp_train(event,position)
 				})
 
 	TempTrain.destructible = false
-	remote.call("logistic-train-network", "reassign_delivery", event.cause.train.id, TempTrain.train)
+	if type == "entrance" then
+		remote.call("logistic-train-network", "reassign_delivery", event.cause.train.id, TempTrain.train)
+	end
 
 	return TempTrain
 end
 
-local function create_ghost_car(event,position)
-	if event.entity.name == "TrainTunnelT1" then
-		SpookyGhost = event.entity.surface.create_entity
-			({
-				name = "PropCarT1",
-				position = position,
-				force = event.cause.force,
-			})
-	elseif event.entity.name == "TrainTunnelT2" then
-		SpookyGhost = event.entity.surface.create_entity
-			({
-				name = "PropCarT2",
-				position = position,
-				force = event.cause.force,
-			})
-	end
+local function copy_train(event,TrainInTunnel)
+	--save basic information
+	TrainInTunnel.name = event.cause.name
+	TrainInTunnel.orientation = event.cause.orientation
+	TrainInTunnel.speed = event.cause.speed
+	TrainInTunnel.backer_name = event.cause.backer_name
+	TrainInTunnel.color = event.cause.color
+	TrainInTunnel.manual_mode = event.cause.train.manual_mode
+	TrainInTunnel.schedule = event.cause.train.schedule
+	TrainInTunnel.currently_burning = event.cause.burner.currently_burning
+	TrainInTunnel.remaining_burning_fuel = event.cause.burner.remaining_burning_fuel
+	TrainInTunnel.fuel_inventory = event.cause.get_fuel_inventory().get_contents()
+	TrainInTunnel.len_carriages = #event.cause.train.carriages
+	TrainInTunnel.real_carriages = event.cause.train.carriages
 
-	SpookyGhost.orientation = event.cause.orientation
+	--save carriage information
+	if #event.cause.train.carriages > 1 then
+		TrainInTunnel.carriages = {}
+		for i=2,#event.cause.train.carriages,1 do
+			event.cause.train.carriages[i].train.speed = 0.5
+			TrainInTunnel.carriages[i]={}
+			if event.cause.train.carriages[i].type == "cargo-wagon" then
+				TrainInTunnel.carriages[i].type = "cargo-wagon"
+				TrainInTunnel.carriages[i].cargo = event.cause.train.carriages[i].get_inventory(defines.inventory.cargo_wagon).get_contents()
+				TrainInTunnel.carriages[i].bar = event.cause.train.carriages[i].get_inventory(defines.inventory.cargo_wagon).get_bar()
+				TrainInTunnel.carriages[i].filter = {}
+				for j = 1, #event.cause.train.carriages[i].get_inventory(defines.inventory.cargo_wagon) do
+					TrainInTunnel.carriages[i].filter[j] = event.cause.train.carriages[i].get_inventory(defines.inventory.cargo_wagon).get_filter(j)
+				end
+			elseif (event.cause.train.carriages[i].type == "fluid-wagon") then
+				TrainInTunnel.carriages[i].type = "fluid-wagon"
+				TrainInTunnel.carriages[i].fluids = event.cause.train.carriages[i].get_fluid_contents()
+			end
+		end
+	end
+end
+
+local function get_orientation(Exit,Entrance)
+	x = global.Tunnels[Exit].tunnel.position.x - global.Tunnels[Entrance].tunnel.position.x
+	y = global.Tunnels[Exit].tunnel.position.y - global.Tunnels[Entrance].tunnel.position.y
+	res = (math.atan2(y, x)+(math.pi/2)) / (math.pi*2)
+	if res > 2*math.pi then
+		res = res - 2*math.pi
+	end
+	return res
+end
+
+local function get_uarea(tunnel)
+	if global.Tunnels[tunnel].tunnel.orientation == 0 then return  {x=0,y=1}
+	elseif global.Tunnels[tunnel].tunnel.orientation == 0.25 then return  {x=-1,y=0}
+	elseif global.Tunnels[tunnel].tunnel.orientation == 0.50 then return  {x=0,y=-1}
+	elseif global.Tunnels[tunnel].tunnel.orientation == 0.75 then return  {x=1,y=0}
+	end
+end
+
+local function create_ghost_car(event,position,orientation)
+	SpookyGhost = event.entity.surface.create_entity
+		({
+			name = "ghostCar",
+			position = position,
+			force = event.cause.force,
+		})
+
+	SpookyGhost.orientation = orientation
 	SpookyGhost.operable = false
 	SpookyGhost.speed = constants.GHOST_SPEED--event.cause.speed
 	SpookyGhost.destructible = false
@@ -64,111 +127,79 @@ local function create_ghost_car(event,position)
 	return SpookyGhost
 end
 
-local function copy_train(event,GC_unit_number)
-	--save basic information
-	global.TrainsInTunnel[SpookyGhost.unit_number].name = event.cause.name
-	global.TrainsInTunnel[SpookyGhost.unit_number].orientation = event.cause.orientation
-	global.TrainsInTunnel[SpookyGhost.unit_number].speed = event.cause.speed
-	global.TrainsInTunnel[SpookyGhost.unit_number].backer_name = event.cause.backer_name
-	global.TrainsInTunnel[SpookyGhost.unit_number].color = event.cause.color
-	global.TrainsInTunnel[SpookyGhost.unit_number].manual_mode = event.cause.train.manual_mode
-	global.TrainsInTunnel[SpookyGhost.unit_number].schedule = event.cause.train.schedule
-	global.TrainsInTunnel[SpookyGhost.unit_number].currently_burning = event.cause.burner.currently_burning
-	global.TrainsInTunnel[SpookyGhost.unit_number].remaining_burning_fuel = event.cause.burner.remaining_burning_fuel
-	global.TrainsInTunnel[SpookyGhost.unit_number].fuel_inventory = event.cause.get_fuel_inventory().get_contents()
-	global.TrainsInTunnel[SpookyGhost.unit_number].len_carriages = #event.cause.train.carriages
+local function train_entered(event,uarea,TrainInTunnel,Exit,Entrance)
+	range = 5.5
+	exit_uarea = get_uarea(Exit)
+	exit_area = math2d.position.multiply_scalar(exit_uarea,range)
+	area = math2d.position.multiply_scalar(uarea,range)
+	position = math2d.position.add(event.entity.position,area) --position for temp objects
+	position2 = math2d.position.add(global.Tunnels[Exit].tunnel.position,exit_area)
 
-	--save carriage information
-	if #event.cause.train.carriages > 1 then
-		global.TrainsInTunnel[SpookyGhost.unit_number].carriages = {}
-		for i=2,#event.cause.train.carriages,1 do
-			event.cause.train.carriages[i].train.speed = 0.5
-			global.TrainsInTunnel[SpookyGhost.unit_number].carriages[i]={}
-			if event.cause.train.carriages[i].type == "cargo-wagon" then
-				global.TrainsInTunnel[SpookyGhost.unit_number].carriages[i].type = "cargo-wagon"
-				global.TrainsInTunnel[SpookyGhost.unit_number].carriages[i].cargo = event.cause.train.carriages[i].get_inventory(defines.inventory.cargo_wagon).get_contents()
-				global.TrainsInTunnel[SpookyGhost.unit_number].carriages[i].bar = event.cause.train.carriages[i].get_inventory(defines.inventory.cargo_wagon).get_bar()
-				global.TrainsInTunnel[SpookyGhost.unit_number].carriages[i].filter = {}
-				for j = 1, #event.cause.train.carriages[i].get_inventory(defines.inventory.cargo_wagon) do
-					global.TrainsInTunnel[SpookyGhost.unit_number].carriages[i].filter[j] = event.cause.train.carriages[i].get_inventory(defines.inventory.cargo_wagon).get_filter(j)
-				end
-			elseif (event.cause.train.carriages[i].type == "fluid-wagon") then
-				global.TrainsInTunnel[SpookyGhost.unit_number].carriages[i].type = "fluid-wagon"
-				global.TrainsInTunnel[SpookyGhost.unit_number].carriages[i].fluids = event.cause.train.carriages[i].get_fluid_contents()
-			end
+	orientation = get_orientation(Exit,Entrance)
+	ghostCar =  create_ghost_car(event,position,orientation)
+	TrainInTunnel.ghostCar = ghostCar
+	TrainInTunnel.destination = global.Tunnels[Exit]
+	TrainInTunnel.arrived = false
+	TrainInTunnel.escape_done = false
+	TrainInTunnel.head_escaped = false
+	TrainInTunnel.exit_uarea = exit_uarea
+	TrainInTunnel.exit_position = position2
+	TrainInTunnel.entered_carriages = 1
+
+	--create ghost train to save the LTN schedule
+	TempTrain = create_temp_train(event,position,"entrance")
+	TrainInTunnel.TempTrain  = TempTrain
+	TempTrain2 = create_temp_train(event,position2,"exit")
+	TrainInTunnel.TempTrain2 = TempTrain2
+	
+	--copy train information
+	copy_train(event,TrainInTunnel)
+	if (TrainInTunnel.len_carriages > 1) then
+		TrainInTunnel.real_carriages[2] = constants.GHOST_SPEED
+	end
+	
+	--transfer passenger to ghost car
+	if (event.cause.get_driver() ~= nil) then
+		TrainInTunnel.passenger = event.cause.get_driver()
+		ghostCar.set_passenger(event.cause.get_driver())
+	end
+	
+	--destroy current train
+	event.cause.destroy({ raise_destroy = true })
+end
+
+local function pairing_target(player)
+	for unit,prop in pairs(global.Tunnels) do
+		if prop.player == player.index then
+			return unit
 		end
+	end
+	return nil
+end
+
+local function train_entered_handler(event)
+	valid_collision, uarea, Entrance, Exit = collision_check(event,1)
+
+
+	--train entering tunnel
+	if valid_collision and event.cause.type == "locomotive" then 
+		global.Tunnels[Entrance].train = {}
+		TrainInTunnel = global.Tunnels[Entrance].train
+		train_entered(event,uarea,TrainInTunnel,Exit,Entrance)
+	--carriages entering tunnel
+	elseif valid_collision and (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon") and global.Tunnels[Entrance].train ~= nil then
+		global.Tunnels[Entrance].train.entered_carriages = global.Tunnels[Entrance].train.entered_carriages + 1
+		if (TrainInTunnel.len_carriages > TrainInTunnel.entered_carriages) then
+			event.cause.train.carriages[TrainInTunnel.entered_carriages+1] = constants.GHOST_SPEED
+		end
+		event.cause.destroy({ raise_destroy = true })
 	end
 end
 
 local function entity_damaged(event)
 	if event.cause and event.entity then
-		object = event.cause.type
-		objectN = event.cause.name
-	else
-		object = nil
-		objectN = nil
+		train_entered_handler(event)
 	end
-	res, uarea = collision_check(event,1)
-
-	--train entering tunnel
-	if res and object == "locomotive" then 
-		range = 5.5
-		area = math2d.position.multiply_scalar(uarea,range)
-		position = math2d.position.add(event.entity.position,area) --position for temp objects
-
-		--create proper ghostcar to bump other side
-		GhostCar =  create_ghost_car(event,position)
-		GC_unit_number = GhostCar.unit_number
-		global.TrainsInTunnel[GC_unit_number] = {}
-		global.TrainsInTunnel[GC_unit_number]["arrived"] = {}
-		global.TrainsInTunnel[GC_unit_number]["arrived"].check = false
-		global.TrainsInTunnel[SpookyGhost.unit_number].guideCar = GhostCar
-
-		--create ghost train to save the LTN schedule
-		TempTrain = create_temp_train(event,position)
-		global.TrainsInTunnel[GC_unit_number].TempTrain  = TempTrain
-		
-		
-		--copy train information
-		copy_train(event,GC_unit_number)
-		
-		--transfer passenger to ghost car
-		if (event.cause.get_driver() ~= nil) then
-			global.TrainsInTunnel[GC_unit_number].passenger = event.cause.get_driver()
-			SpookyGhost.set_passenger(event.cause.get_driver())
-		end
-		
-		--destroy current train
-		event.cause.destroy({ raise_destroy = true })
-		
-	--carriages entering tunnel
-	elseif res and (object == "cargo-wagon" or object == "fluid-wagon") then
-		event.cause.destroy({ raise_destroy = true })
-		
-	--train escaping from tunnel
-	elseif res and (objectN == "PropCarT1" or objectN == "PropCarT2") then
-		range = 5.5
-		area = math2d.position.multiply_scalar(uarea,range)
-		position = math2d.position.add(event.entity.position,area) --position for temp objects
-		--find train in tunnel
-		prop = global.TrainsInTunnel[event.cause.unit_number]
-
-		--save information that train arrived at end of tunnel <- will be handled in on_tick
-		prop["arrived"].check = true
-		prop["arrived"].site = position
-		prop["arrived"].uarea = uarea
-		prop.escape_done = false
-		prop.head_escaped = false
-
-	elseif string.find(event.entity.name, "PropCar") and string.find(event.cause.name, "PropCar") then
-		if not global.TrainsInTunnel[event.cause.unit_number]["arrived"].check then
-			event.cause.speed = constants.GHOST_SPEED
-		end
-		if not global.TrainsInTunnel[event.entity.unit_number]["arrived"].check then
-			event.entity.speed = constants.GHOST_SPEED
-		end
-	end
-
 end
 
 return entity_damaged
