@@ -56,10 +56,10 @@ local function create_temp_train(event,position,type)
 	return TempTrain
 end
 
-local function copy_train(event,TrainInTunnel)
+local function copy_train(event,TrainInTunnel,Exit)
 	--save basic information
 	TrainInTunnel.name = event.cause.name
-	TrainInTunnel.orientation = event.cause.orientation
+	TrainInTunnel.orientation = global.Tunnels[Exit].mask.direction
 	TrainInTunnel.speed = event.cause.speed
 	TrainInTunnel.backer_name = event.cause.backer_name
 	TrainInTunnel.color = event.cause.color
@@ -94,8 +94,8 @@ local function copy_train(event,TrainInTunnel)
 end
 
 local function get_orientation(Exit,Entrance)
-	x = global.Tunnels[Exit].tunnel.position.x - global.Tunnels[Entrance].tunnel.position.x
-	y = global.Tunnels[Exit].tunnel.position.y - global.Tunnels[Entrance].tunnel.position.y
+	x = global.Tunnels[Exit].mask.position.x - global.Tunnels[Entrance].mask.position.x
+	y = global.Tunnels[Exit].mask.position.y - global.Tunnels[Entrance].mask.position.y
 	res = (math.atan2(y, x)+(math.pi/2)) / (math.pi*2)
 	if res > 2*math.pi then
 		res = res - 2*math.pi
@@ -152,7 +152,7 @@ local function train_entered(event,uarea,TrainInTunnel,Exit,Entrance)
 	TrainInTunnel.TempTrain2 = TempTrain2
 	
 	--copy train information
-	copy_train(event,TrainInTunnel)
+	copy_train(event,TrainInTunnel,Exit)
 	if (TrainInTunnel.len_carriages > 1) then
 		TrainInTunnel.real_carriages[2] = constants.GHOST_SPEED
 	end

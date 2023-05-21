@@ -15,11 +15,6 @@ local function entity_built(event)
 	if tunnelHandler(entity, player) then
 		return
 	end
-
-	------- make train tunnel stuff unrotatable just in case
-	if entity.name == "TrainTunnelT1" or entity.name == "TrainTunnelT2" then
-		entity.rotatable = false
-	end
 	
 end
 

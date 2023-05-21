@@ -22,7 +22,7 @@ end
 
 local function get_name(name,extra_name)
 	if extra_name == "rail-signal" then
-		return extra_name
+		return extra_name, false
 	else
 		newName = string.gsub(name, '-placer', extra_name)
 		return newName
@@ -50,6 +50,9 @@ local function build_components(entity,player,name)
 		if component == nil then
 			game.print(newName)
 			success = false
+		else
+			component.rotatable = false
+			if i ~= 1 then component.destructible = false end
 		end
 		table.insert(components,component)
 	end
@@ -71,6 +74,7 @@ local function build_mask(entity,player,name)
 	if mask == nil then
 		return false, mask
 	else
+		mask.rotatable = false
 		return true, mask
 	end
 	

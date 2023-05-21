@@ -18,9 +18,9 @@ local function entity_destroyed(event)
 			global.Tunnels[paired].mask.destroy()
 			global.Tunnels[paired] = nil
 			if global.Tunnels[unum].train then
-				global.Tunnels[unum].train.TempTrain.destroy()
-				global.Tunnels[unum].train.TempTrain2.destroy()
-				global.Tunnels[unum].train.ghostCar.destroy()
+				if global.Tunnels[unum].train.TempTrain then global.Tunnels[unum].train.TempTrain.destroy() end
+				if global.Tunnels[unum].train.TempTrain2 then global.Tunnels[unum].train.TempTrain2.destroy() end
+				if global.Tunnels[unum].train.ghostCar then global.Tunnels[unum].train.ghostCar.destroy() end
 				global.Tunnels[unum].train = nil
 			end
 		elseif global.Tunnels[unum].paired and global.Tunnels[unum].type == "exit" then
@@ -30,9 +30,9 @@ local function entity_destroyed(event)
 			global.Tunnels[paired].timer = 0
 			global.Tunnels[paired].paired_to = nil
 			if global.Tunnels[paired].train then
-				global.Tunnels[paired].train.TempTrain.destroy()
-				global.Tunnels[paired].train.TempTrain2.destroy()
-				global.Tunnels[paired].train.ghostCar.destroy()
+				if global.Tunnels[paired].train.TempTrain then global.Tunnels[paired].train.TempTrain.destroy() end
+				if global.Tunnels[paired].train.TempTrain2 then global.Tunnels[paired].train.TempTrain2.destroy() end
+				if global.Tunnels[paired].train.ghostCar then global.Tunnels[paired].train.ghostCar.destroy() end
 				global.Tunnels[paired].train = nil
 			end
 		end
