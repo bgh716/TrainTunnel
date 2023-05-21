@@ -59,7 +59,8 @@ end
 local function copy_train(event,TrainInTunnel,Exit)
 	--save basic information
 	TrainInTunnel.name = event.cause.name
-	TrainInTunnel.orientation = global.Tunnels[Exit].mask.direction
+
+	TrainInTunnel.orientation = global.Tunnels[Exit].tunnel.orientation-0.5
 	TrainInTunnel.speed = event.cause.speed
 	TrainInTunnel.backer_name = event.cause.backer_name
 	TrainInTunnel.color = event.cause.color
@@ -94,8 +95,8 @@ local function copy_train(event,TrainInTunnel,Exit)
 end
 
 local function get_orientation(Exit,Entrance)
-	x = global.Tunnels[Exit].mask.position.x - global.Tunnels[Entrance].mask.position.x
-	y = global.Tunnels[Exit].mask.position.y - global.Tunnels[Entrance].mask.position.y
+	x = global.Tunnels[Exit].tunnel.position.x - global.Tunnels[Entrance].tunnel.position.x
+	y = global.Tunnels[Exit].tunnel.position.y - global.Tunnels[Entrance].tunnel.position.y
 	res = (math.atan2(y, x)+(math.pi/2)) / (math.pi*2)
 	if res > 2*math.pi then
 		res = res - 2*math.pi
@@ -144,6 +145,7 @@ local function train_entered(event,uarea,TrainInTunnel,Exit,Entrance)
 	TrainInTunnel.exit_uarea = exit_uarea
 	TrainInTunnel.exit_position = position2
 	TrainInTunnel.entered_carriages = 1
+	TrainInTunnel.land_tick = math.ceil(game.tick + math.abs(global.Tunnels[Entrance].distance/(constants.SPEED_COEFF*constants.GHOST_SPEED)))
 
 	--create ghost train to save the LTN schedule
 	TempTrain = create_temp_train(event,position,"entrance")

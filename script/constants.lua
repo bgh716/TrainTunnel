@@ -3,6 +3,7 @@ Constants = {}
 Constants.GHOST_SPEED = 0.75
 Constants.PAIRING_TIMEOUT = 3000
 Constants.RANGE = 5.5
+Constants.SPEED_COEFF = 0.9
 Constants.NUM_COMPONENTS = 6
 
 
