@@ -40,8 +40,6 @@ script.on_event(
 )
 
 script.on_event(
-	{
-		"cancel-pairing",
-	},
+	"cancel-pairing",
 	require("script.cancel_pairing")
 )

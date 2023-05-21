@@ -11,101 +11,56 @@ local function pairing_target(tunnel)
 	return nil
 end
 
-local function build_components(entity,player,name,sig_pos)
+local function get_component_position(info,direction)
+	index = info[2]
+	if index == 0 then
+		return info[1][direction]
+	else
+		return info[1][direction][index]
+	end
+end
+
+local function get_name(name,extra_name)
+	if extra_name == "rail-signal" then
+		return extra_name
+	else
+		newName = string.gsub(name, '-placer', extra_name)
+		return newName
+	end
+end
+
+local function build_components(entity,player,name)
 
 	success = true
+	components = {}
+	for i=1, constants.NUM_COMPONENTS,1 do
+		position_adjusment = get_component_position(constants.COMPONENT_POSITIONS[i],entity.direction)
+		newName = get_name(name,constants.COMPONENT_NAMES[i])
+		
+		component = entity.surface.create_entity({
+			name = newName,
+			position = math2d.position.add(entity.position, position_adjusment),
+			direction = entity.direction,
+			force = entity.force,
+			raise_built = true,
+			create_build_effect_smoke = false,
+			player = player
+		})
 
-	local tunnel = entity.surface.create_entity({
-		name = string.gsub(name, '-placer', ''),
-		position = math2d.position.add(entity.position, constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION[entity.direction]),
-		direction = entity.direction,
-		force = entity.force,
-		raise_built = true,
-		create_build_effect_smoke = false,
-		player = player
-	})
-
-	if tunnel == nil then
-		game.print("tunnnel")
-		success = false
+		if component == nil then
+			game.print(newName)
+			success = false
+		end
+		table.insert(components,component)
 	end
 
-	local garage = entity.surface.create_entity({
-		name = string.gsub(name, '-placer', '') .. "-garage",
-		position = math2d.position.add(entity.position, constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION[entity.direction]),
-		direction = entity.direction,
-		force = entity.force,
-		create_build_effect_smoke = false,
-		player = player
-	})
-
-	if garage == nil then
-		game.print("garage")
-		success = false
-	end
-
-	local wall1 = entity.surface.create_entity({
-		name = string.gsub(name, '-placer', '') .. "-wall",
-		position = math2d.position.add(entity.position, constants.PLACER_TO_WALL1_SHIFT_BY_DIRECTION[entity.direction]),
-		direction = entity.direction,
-		force = entity.force,
-		create_build_effect_smoke = false,
-		player = player
-	})
-
-	if wall1 == nil then
-		game.print("wall1")
-		success = false
-	end
-
-	local wall2 = entity.surface.create_entity({
-		name = string.gsub(name, '-placer', '') .. "-wall",
-		position = math2d.position.add(entity.position, Constants.PLACER_TO_WALL2_SHIFT_BY_DIRECTION[entity.direction]),
-		direction = entity.direction,
-		force = entity.force,
-		create_build_effect_smoke = false,
-		player = player
-	})
-
-	if wall2 == nil then
-		game.print("wall2")
-		success = false
-	end
-	local signal1 = entity.surface.create_entity({
-		name = "rail-signal",
-		position = math2d.position.add(entity.position,sig_pos1 ),
-		direction = entity.direction,
-		force = entity.force,
-		create_build_effect_smoke = false,
-		player = player
-	})
-
-	if signal1 == nil then
-		game.print("signal1")
-		success = false
-	end
-
-	local signal2 = entity.surface.create_entity({
-		name = "rail-signal",
-		position = math2d.position.add(entity.position,math2d.position.multiply_scalar(sig_pos2,-1) ),
-		direction = entity.direction,
-		force = entity.force,
-		create_build_effect_smoke = false,
-		player = player
-	})
-
-	if signal2 == nil then
-		game.print("signal2")
-		success = false
-	end
-
-	return success, tunnel, garage, wall1, wall2, signal1, signal2
+	return success, components
 end
 
 local function build_mask(entity,player,name)
 	mask = entity.surface.create_entity({
 		name = string.gsub(name, '-placer', '') .. "-mask",
-		position = math2d.position.add(entity.position, constants.PLACER_TO_RAMP_SHIFT_BY_DIRECTION[entity.direction]),
+		position = math2d.position.add(entity.position, constants.PLACER_TO_TUNNEL_SHIFT_BY_DIRECTION[entity.direction]),
 		direction = entity.direction,
 		force = entity.force,
 		raise_built = true,
@@ -122,21 +77,13 @@ local function build_mask(entity,player,name)
 end
 
 local function destroy(object)
-	if object ~= nil then
-		game.print(object)
+	if object then
 		object.destroy()
 	end
 end
 
 local function handleTrainTunnelPlacerBuilt(entity, player)
 	-- Swap the placer out for the real thing
-	if entity.direction == 6 or entity.direction == 2 then --horizontal
-		sig_pos1 = {5,0}
-		sig_pos2 = {5,0}
-	elseif entity.direction == 4 or entity.direction == 0 then --vertical
-		sig_pos1 = {0,5}
-		sig_pos2 = {0,5}
-	end
 
 	if entity.name == "TrainTunnelT1-placer" then
 		name = "TrainTunnelT1-placer"
@@ -147,19 +94,16 @@ local function handleTrainTunnelPlacerBuilt(entity, player)
 	end
 
 	valid_mask, mask = build_mask(entity,player,name)
-	valid_components, tunnel, garage, wall1, wall2, signal1, signal2 = build_components(entity,player,name,sig_pos)
+	valid_components, components = build_components(entity,player,name)
 	
 
-	if valid_mask and valid_components and entrance ~= nil then
+	if valid_mask and valid_components and entrance then
 		
 		global.Tunnels[mask.unit_number] = {}
 		global.Tunnels[mask.unit_number].mask = mask
-		global.Tunnels[mask.unit_number].tunnel = tunnel
-		global.Tunnels[mask.unit_number].garage = garage
-		global.Tunnels[mask.unit_number].wall1 = wall1
-		global.Tunnels[mask.unit_number].wall2 = wall2
-		global.Tunnels[mask.unit_number].signal1 = signal1
-		global.Tunnels[mask.unit_number].signal2 = signal2
+		global.Tunnels[mask.unit_number].tunnel = components[1]
+		table.remove(components,1)
+		global.Tunnels[mask.unit_number].components = components
 		global.Tunnels[mask.unit_number].pairing = false
 		global.Tunnels[mask.unit_number].timer = 0
 		global.Tunnels[mask.unit_number].train = nil
@@ -187,13 +131,10 @@ local function handleTrainTunnelPlacerBuilt(entity, player)
 	else
 		local dst = player or game
 		dst.print({"tunnel.unable"})
+		for i=1,#components,1 do
+			destroy(components[i])
+		end
 		destroy(mask)
-		destroy(tunnel)
-		destroy(garage)
-		destroy(wall1)
-		destroy(wall2)
-		destroy(signal1)
-		destroy(signal2)
 	end
 	entity.destroy({raise_destroy = true})
 end

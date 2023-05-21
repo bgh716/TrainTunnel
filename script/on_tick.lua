@@ -41,7 +41,7 @@ local function load_train(train)
 			force = train.ghostCar.force,
 			raise_built = true
 			})
-	if NewTrain ~= nil then
+	if NewTrain then
 
 		NewTrain.train.speed = 0.5			
 		NewTrain.backer_name = train.backer_name
@@ -69,7 +69,7 @@ local function load_carriage(train)
 			force = train.newTrain.force,
 			raise_built = true
 			})
-	if NewCarriage ~= nil then
+	if NewCarriage then
 
 		NewCarriage.connect_rolling_stock(defines.rail_direction.front)
 		train.newTrain.train.manual_mode = train.manual_mode
@@ -96,7 +96,7 @@ end
 
 local function search_tunnel(train)
 	target = train.ghostCar.surface.find_entity("TrainTunnelT2-mask", train.ghostCar.position)
-	if target ~= nil and target.unit_number == train.destination.mask.unit_number then
+	if target and target.unit_number == train.destination.mask.unit_number then
 		train.arrived = true
 		train.ghostCar.speed = 0
 	end
@@ -113,9 +113,9 @@ local function arrived_tunnel_handler(event,train,tunnel,index)
 			--create new train
 			NewTrain = load_train(train)
 
-			if NewTrain ~= nil then
+			if NewTrain then
 				--transfer passenger
-				if (train.passenger ~= nil) then
+				if (train.passenger) then
 					if (train.passenger.is_player()) then
 						NewTrain.set_driver(train.passenger)
 					else
@@ -136,7 +136,7 @@ local function arrived_tunnel_handler(event,train,tunnel,index)
 	elseif train.escape_done == false and train.head_escaped == true then
 		if not detect_train(train,"Carriage") then
 			NewCarriage = load_carriage(train)
-			if NewCarriage ~= nil then
+			if NewCarriage then
 				if train.entered_carriages == train.num then
 					train.escape_done = true
 				else
@@ -158,7 +158,7 @@ end
 local function train_process(event)
 	index = 1
 	for unit,tunnel in pairs(global.Tunnels) do
-		if tunnel.train ~= nil then
+		if tunnel.train then
 			train = tunnel.train
 			train_handler(event,train,tunnel,index)
 		end
@@ -170,6 +170,10 @@ local function pairing_handler(event)
 	local dst = player or game
 	for unit,prop in pairs(global.Tunnels) do
 		if prop.timer >= constants.PAIRING_TIMEOUT and prop.pairing == true then
+			player = game.players[global.Tunnels[unit].player]
+			if player.cursor_stack.valid_for_read and player.cursor_stack.name == "TrainTunnelT2Item" then
+				player.cursor_stack.clear()
+			end
 			global.Tunnels[unit].pairing = false
 			global.Tunnels[unit].player = nil
 			prop.timer = 0

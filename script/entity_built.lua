@@ -16,7 +16,7 @@ local function entity_built(event)
 		return
 	end
 
-	------- make train ramp stuff unrotatable just in case
+	------- make train tunnel stuff unrotatable just in case
 	if entity.name == "TrainTunnelT1" or entity.name == "TrainTunnelT2" then
 		entity.rotatable = false
 	end

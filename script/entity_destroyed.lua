@@ -1,26 +1,23 @@
 local function entity_destroyed(event)
 
-	if event.entity~=nil then unum = event.unit_number or event.entity.unit_number
+	if event.entity then unum = event.unit_number or event.entity.unit_number
 	else return end
-	if global.Tunnels[unum] ~= nil then
+	if global.Tunnels[unum] then
 		paired = global.Tunnels[unum].paired_to
-		global.Tunnels[unum].garage.destroy()
-		global.Tunnels[unum].wall1.destroy()
-		global.Tunnels[unum].wall2.destroy()
+		for i=1,#global.Tunnels[unum].components,1 do
+			global.Tunnels[unum].components[i].destroy()
+		end
+
 		global.Tunnels[unum].tunnel.destroy()
-		global.Tunnels[unum].signal1.destroy()
-		global.Tunnels[unum].signal2.destroy()
-		
+
 		if global.Tunnels[unum].paired and global.Tunnels[unum].type == "entrance" then
-			global.Tunnels[paired].garage.destroy()
-			global.Tunnels[paired].wall1.destroy()
-			global.Tunnels[paired].wall2.destroy()
+			for i=1,#global.Tunnels[paired].components,1 do
+				global.Tunnels[paired].components[i].destroy()
+			end
 			global.Tunnels[paired].tunnel.destroy()
-			global.Tunnels[paired].signal1.destroy()
-			global.Tunnels[paired].signal2.destroy()
 			global.Tunnels[paired].mask.destroy()
 			global.Tunnels[paired] = nil
-			if global.Tunnels[unum].train ~= nil then
+			if global.Tunnels[unum].train then
 				global.Tunnels[unum].train.TempTrain.destroy()
 				global.Tunnels[unum].train.TempTrain2.destroy()
 				global.Tunnels[unum].train.ghostCar.destroy()
@@ -32,7 +29,7 @@ local function entity_destroyed(event)
 			global.Tunnels[paired].player = nil
 			global.Tunnels[paired].timer = 0
 			global.Tunnels[paired].paired_to = nil
-			if global.Tunnels[paired].train ~= nil then
+			if global.Tunnels[paired].train then
 				global.Tunnels[paired].train.TempTrain.destroy()
 				global.Tunnels[paired].train.TempTrain2.destroy()
 				global.Tunnels[paired].train.ghostCar.destroy()

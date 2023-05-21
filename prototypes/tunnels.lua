@@ -109,7 +109,7 @@ local function makeMaskEntity(name, icon, pictureFileName, placerItem)
 		collision_mask = {},
 		render_layer = "higher-object-above",
 		picture = {
-			-- Shifts are inverted because the sprites are pre-shifted to be at the ramp position already
+			-- Shifts are inverted because the sprites are pre-shifted to be at the tunnel position already
 			north = {
 				filename = pictureFileName,
 				width = 500,
@@ -219,8 +219,8 @@ local function makeWallEntity(name, icon, pictureFileName, placerItem)
 end
 
 local function makeTunnelPrototypes(baseName)
-	local iconFilename = '__TrainTunnel__/graphics/TrainRamp/' .. baseName .. '-icon.png'
-	local entityPictureFilename =  '__TrainTunnel__/graphics/TrainRamp/' .. baseName .. '.png'
+	local iconFilename = '__TrainTunnel__/graphics/TrainTunnel/' .. baseName .. '-icon.png'
+	local entityPictureFilename =  '__TrainTunnel__/graphics/TrainTunnel/' .. baseName .. '.png'
 	local itemName = baseName .. 'Item'
 
 	return {

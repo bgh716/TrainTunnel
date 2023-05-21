@@ -13,7 +13,7 @@ local function test(event)
 	player = game.get_player(event.player_index)
 	tunnel = player.surface.find_entity('TrainTunnelT1-mask', event.cursor_position) --need capsule to detect tunnel constantly, and the capsule id should be stored as key of global.Tunnels
 
-	if tunnel ~= nil then
+	if tunnel then
 		if global.Tunnels[tunnel.unit_number].paired == false and global.Tunnels[tunnel.unit_number].pairing == false and not user_under_paring(player.index) then
 			global.Tunnels[tunnel.unit_number].pairing = true
 			global.Tunnels[tunnel.unit_number].timer = 0
