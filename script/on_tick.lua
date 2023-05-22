@@ -1,19 +1,11 @@
 local math2d = require('math2d')
 local constants = require('constants')
 
-local function detect_train(train,type)
+local function detect_train(train,type,direction)
 	if type == "Train" then
-		if train.exit_uarea.x == 0 then
-			left_top = {x=-1,y=-10}
-		else
-			left_top = {x=-8,y=-1}
-		end
+		left_top = constants.TRAIN_DETECTION_RANGE[direction]
 	else
-		if train.exit_uarea.x == 0 then
-			left_top = {x=-1,y=-4.5}
-		else
-			left_top = {x=-3,y=-1}
-		end
+		left_top = constants.CARRIAGE_DETECTION_RANGE[direction]
 	end
 
 	right_down = math2d.position.multiply_scalar(left_top,-1)
@@ -42,7 +34,6 @@ local function load_train(train)
 			raise_built = true
 			})
 	if NewTrain then
-
 		NewTrain.train.speed = 0.5			
 		NewTrain.backer_name = train.backer_name
 		NewTrain.color = train.color
@@ -62,33 +53,37 @@ local function load_train(train)
 end
 
 local function load_carriage(train)
-	NewCarriage = train.ghostCar.surface.create_entity({
-			name = train.carriages[train.num].type,
-			position = train.exit_position,
-			orientation = train.orientation,
-			force = train.newTrain.force,
-			raise_built = true
-			})
-	if NewCarriage then
+	if train.newTrain.valid then
+		NewCarriage = train.ghostCar.surface.create_entity({
+				name = train.carriages[train.num].type,
+				position = train.exit_position,
+				orientation = train.orientation,
+				force = train.newTrain.force,
+				raise_built = true
+				})
+		if NewCarriage then
 
-		NewCarriage.connect_rolling_stock(defines.rail_direction.front)
-		train.newTrain.train.manual_mode = train.manual_mode
+			NewCarriage.connect_rolling_stock(defines.rail_direction.front)
+			train.newTrain.train.manual_mode = train.manual_mode
 
 
-		if (NewCarriage.type == "cargo-wagon") then
-			NewCarriage.get_inventory(defines.inventory.cargo_wagon).set_bar(train.carriages[train.num].bar)
-			for i, filter in pairs(train.carriages[train.num].filter) do
-				NewCarriage.get_inventory(defines.inventory.cargo_wagon).set_filter(i, filter)
+			if (NewCarriage.type == "cargo-wagon") then
+				NewCarriage.get_inventory(defines.inventory.cargo_wagon).set_bar(train.carriages[train.num].bar)
+				for i, filter in pairs(train.carriages[train.num].filter) do
+					NewCarriage.get_inventory(defines.inventory.cargo_wagon).set_filter(i, filter)
+				end
+				for ItemName, quantity in pairs(train.carriages[train.num].cargo) do
+					NewCarriage.get_inventory(defines.inventory.cargo_wagon).insert({name = ItemName, count = quantity})
+				end
+			elseif (NewCarriage.type == "fluid-wagon") then
+				for FluidName, quantity in pairs(train.carriages[train.num].fluids) do
+					NewCarriage.insert_fluid({name = FluidName, amount = quantity})
+				end
 			end
-			for ItemName, quantity in pairs(train.carriages[train.num].cargo) do
-				NewCarriage.get_inventory(defines.inventory.cargo_wagon).insert({name = ItemName, count = quantity})
-			end
-		elseif (NewCarriage.type == "fluid-wagon") then
-			for FluidName, quantity in pairs(train.carriages[train.num].fluids) do
-				NewCarriage.insert_fluid({name = FluidName, amount = quantity})
-			end
+
 		end
-
+	else
+		train.escape_done = true
 	end
 
 	return NewCarriage
@@ -103,13 +98,14 @@ local function search_tunnel(train)
 end
 
 local function arrived_tunnel_handler(event,train,tunnel,index)
+	Exit_Direction = global.Tunnels[tunnel.paired_to].tunnel.direction
 	if train.escape_done == true and train.head_escaped == true then
 		train.ghostCar.destroy()
 		train.TempTrain.destroy()
 		
 		tunnel.train = nil
 	elseif train.escape_done == false and train.head_escaped == false then
-		if not detect_train(train,"Train") then
+		if not detect_train(train,"Train",Exit_Direction) then
 			--create new train
 			NewTrain = load_train(train)
 
@@ -134,7 +130,7 @@ local function arrived_tunnel_handler(event,train,tunnel,index)
 			end
 		end
 	elseif train.escape_done == false and train.head_escaped == true then
-		if not detect_train(train,"Carriage") then
+		if not detect_train(train,"Carriage",Exit_Direction) then
 			NewCarriage = load_carriage(train)
 			if NewCarriage then
 				if train.entered_carriages == train.num then

@@ -29,11 +29,11 @@ local function get_name(name,extra_name)
 	end
 end
 
-local function build_components(entity,player,name)
+local function build_components(entity,player,name,type)
 
 	success = true
 	components = {}
-	for i=1, constants.NUM_COMPONENTS,1 do
+	for i=1, #constants.COMPONENT_POSITIONS,1 do
 		position_adjusment = get_component_position(constants.COMPONENT_POSITIONS[i],entity.direction)
 		newName = get_name(name,constants.COMPONENT_NAMES[i])
 		
@@ -92,13 +92,15 @@ local function handleTrainTunnelPlacerBuilt(entity, player)
 	if entity.name == "TrainTunnelT1-placer" then
 		name = "TrainTunnelT1-placer"
 		entrance = "dummy"
+		type = "Entrance"
 	elseif entity.name == "TrainTunnelT2-placer" then
 		name = "TrainTunnelT2-placer"
 		entrance = pairing_target(player)
+		type = "Exit"
 	end
 
 	valid_mask, mask = build_mask(entity,player,name)
-	valid_components, components = build_components(entity,player,name)
+	valid_components, components = build_components(entity,player,name,type)
 	
 
 	if valid_mask and valid_components and entrance then

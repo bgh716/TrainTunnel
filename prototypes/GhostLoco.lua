@@ -21,6 +21,7 @@ data:extend{
 		air_resistance = 0.000000000001, -- this is a percentage of current speed that will be subtracted
 		connection_distance = 0,
 		joint_distance = 0,
+		tie_distance = 0,
 		energy_source = {type = "void"},
 		vertical_selection_shift = -0.5,
 		energy_per_hit_point = 0,

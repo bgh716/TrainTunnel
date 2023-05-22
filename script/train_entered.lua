@@ -28,7 +28,9 @@ local function collision_check(event, range)
 		and event.entity.name == "TrainTunnelT1" and global.Tunnels[mask]
 		and global.Tunnels[mask].paired == true
 		and global.Tunnels[mask].train == nil
-		or (global.Tunnels[mask].train and (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon"))
+		or (global.Tunnels[mask]
+			and global.Tunnels[mask].train
+			and (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon"))
 	) then 
 		entrance = mask
 		exit = global.Tunnels[mask].paired_to
@@ -47,10 +49,11 @@ local function create_temp_train(event,position,type)
 					force = event.cause.force,
 					raise_built = false
 				})
-
-	TempTrain.destructible = false
-	if type == "entrance" then
-		remote.call("logistic-train-network", "reassign_delivery", event.cause.train.id, TempTrain.train)
+	if TempTrain then
+		TempTrain.destructible = false
+		if type == "entrance" then
+			remote.call("logistic-train-network", "reassign_delivery", event.cause.train.id, TempTrain.train)
+		end
 	end
 
 	return TempTrain
@@ -59,7 +62,7 @@ end
 local function copy_train(event,TrainInTunnel,Exit)
 	--save basic information
 	TrainInTunnel.name = event.cause.name
-
+	game.print(global.Tunnels[Exit].tunnel.orientation-0.5)
 	TrainInTunnel.orientation = global.Tunnels[Exit].tunnel.orientation-0.5
 	TrainInTunnel.speed = event.cause.speed
 	TrainInTunnel.backer_name = event.cause.backer_name
@@ -130,28 +133,44 @@ end
 
 local function train_entered(event,uarea,TrainInTunnel,Exit,Entrance)
 	exit_uarea = get_uarea(Exit)
-	exit_area = math2d.position.multiply_scalar(exit_uarea,constants.RANGE)
-	area = math2d.position.multiply_scalar(uarea,constants.RANGE)
-	position = math2d.position.add(event.entity.position,area) --position for temp objects
-	position2 = math2d.position.add(global.Tunnels[Exit].tunnel.position,exit_area)
+
+	temp1_area = math2d.position.multiply_scalar(uarea,constants.RANGE)
+	temp2_area = math2d.position.multiply_scalar(exit_uarea,constants.RANGE2)
+	exit_area = math2d.position.multiply_scalar(exit_uarea,constants.RANGE3)
+
+	
+	temp1_position = math2d.position.add(event.entity.position,temp1_area) --position for temp train1/ghost car objects
+	exit_position = math2d.position.add(global.Tunnels[Exit].tunnel.position,exit_area) -- train exit position
+	temp2_position = math2d.position.add(global.Tunnels[Exit].tunnel.position,temp2_area) -- position for temp train2 object
 
 	orientation = get_orientation(Exit,Entrance)
-	ghostCar =  create_ghost_car(event,position,orientation)
+	ghostCar =  create_ghost_car(event,temp1_position,orientation)
+	--create ghost train to save the LTN schedule
+	TempTrain = create_temp_train(event,temp1_position,"entrance")
+	TrainInTunnel.TempTrain  = TempTrain
+	TempTrain2 = create_temp_train(event,temp2_position,"exit")
+	TrainInTunnel.TempTrain2 = TempTrain2
+	---------------------------------------------------------
+	--temptrain position, exit_position adjustment required--
+	---------------------------------------------------------
+	--sigposition--------------------------------------------
+	--ontick loop combine-----------------------------------
+	if ghostCar == nil or TempTrain == nil or TempTrain2 == nil then
+		TrainInTunnel = nil
+		return
+	end
+
 	TrainInTunnel.ghostCar = ghostCar
 	TrainInTunnel.destination = global.Tunnels[Exit]
 	TrainInTunnel.arrived = false
 	TrainInTunnel.escape_done = false
 	TrainInTunnel.head_escaped = false
 	TrainInTunnel.exit_uarea = exit_uarea
-	TrainInTunnel.exit_position = position2
+	TrainInTunnel.exit_position = exit_position
 	TrainInTunnel.entered_carriages = 1
 	TrainInTunnel.land_tick = math.ceil(game.tick + math.abs(global.Tunnels[Entrance].distance/(constants.SPEED_COEFF*constants.GHOST_SPEED)))
 
-	--create ghost train to save the LTN schedule
-	TempTrain = create_temp_train(event,position,"entrance")
-	TrainInTunnel.TempTrain  = TempTrain
-	TempTrain2 = create_temp_train(event,position2,"exit")
-	TrainInTunnel.TempTrain2 = TempTrain2
+	
 	
 	--copy train information
 	copy_train(event,TrainInTunnel,Exit)
