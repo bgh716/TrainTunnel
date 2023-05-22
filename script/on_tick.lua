@@ -196,7 +196,6 @@ local function flush_nil(event)
 		end
 		index = index + 1
 	end
-
 end
 
 local function on_tick(event)

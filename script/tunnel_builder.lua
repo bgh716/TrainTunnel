@@ -105,6 +105,7 @@ local function handleTrainTunnelPlacerBuilt(entity, player)
 		
 		global.Tunnels[mask.unit_number] = {}
 		global.Tunnels[mask.unit_number].mask = mask
+		global.Tunnels[mask.unit_number].drawing = false
 		global.Tunnels[mask.unit_number].tunnel = components[1]
 		table.remove(components,1)
 		global.Tunnels[mask.unit_number].components = components

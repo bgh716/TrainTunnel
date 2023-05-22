@@ -30,6 +30,11 @@ script.on_event(
 )
 
 script.on_nth_tick(
+	5,
+	require("script.drawing_tick")
+)
+
+script.on_nth_tick(
 	1,
 	require("script.on_tick")
 )
@@ -42,4 +47,9 @@ script.on_event(
 script.on_event(
 	"cancel-pairing",
 	require("script.cancel_pairing")
+)
+
+script.on_event(
+	"path-drawing",
+	require("script.path_drawing")
 )

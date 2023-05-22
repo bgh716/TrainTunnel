@@ -17,6 +17,12 @@ local function entity_destroyed(event)
 			global.Tunnels[paired].tunnel.destroy()
 			global.Tunnels[paired].mask.destroy()
 			global.Tunnels[paired] = nil
+			if global.Tunnels[unum].drawing_car then 
+				global.Tunnels[unum].drawing_car.destroy()
+				for i = 1, #global.Tunnels[unum].drew, 1 do
+					if global.Tunnels[unum].drew[i] then global.Tunnels[unum].drew[i].destroy() end
+				end
+			end
 			if global.Tunnels[unum].train then
 				if global.Tunnels[unum].train.TempTrain then global.Tunnels[unum].train.TempTrain.destroy() end
 				if global.Tunnels[unum].train.TempTrain2 then global.Tunnels[unum].train.TempTrain2.destroy() end
@@ -29,6 +35,12 @@ local function entity_destroyed(event)
 			global.Tunnels[paired].player = nil
 			global.Tunnels[paired].timer = 0
 			global.Tunnels[paired].paired_to = nil
+			if global.Tunnels[paired].drawing_car then
+				global.Tunnels[paired].drawing_car.destroy()
+				for i = 1, #global.Tunnels[paired].drew, 1 do
+					if global.Tunnels[paired].drew[i] then global.Tunnels[paired].drew[i].destroy() end
+				end
+			end
 			if global.Tunnels[paired].train then
 				if global.Tunnels[paired].train.TempTrain then global.Tunnels[paired].train.TempTrain.destroy() end
 				if global.Tunnels[paired].train.TempTrain2 then global.Tunnels[paired].train.TempTrain2.destroy() end

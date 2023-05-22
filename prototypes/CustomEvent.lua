@@ -15,3 +15,11 @@ local cancel_pairing={
     consuming = "none"
 }
 data:extend{cancel_pairing}
+
+local path_drawing={
+    type = "custom-input",
+    name = "path-drawing",
+    key_sequence = "mouse-button-1",
+    consuming = "none"
+}
+data:extend{path_drawing}
