@@ -1,3 +1,0 @@
-1sec delay or prevent damage(train sticking problem when exit is blocked) => find space other than produce first strategy
-
-tunnel paring
