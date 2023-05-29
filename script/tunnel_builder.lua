@@ -48,11 +48,13 @@ local function build_components(entity,player,name,type)
 		})
 
 		if component == nil then
-			game.print(newName)
 			success = false
 		else
 			component.rotatable = false
-			if i ~= 1 then component.destructible = false end
+			if i ~= 1 then 
+				component.destructible = false
+				component.minable = false
+			end
 		end
 		table.insert(components,component)
 	end
@@ -60,10 +62,48 @@ local function build_components(entity,player,name,type)
 	return success, components
 end
 
+local function build_rails(entity,player)
+
+	success = true
+	rails = {}
+	unit = {0,0}
+	position_adjusment = constants.PLACER_TO_RAIL_SHIFT_BY_DIRECTION[entity.direction]
+	if (entity.direction == defines.direction.north or entity.direction == defines.direction.south) then
+		unit = {0,1}
+	else
+		unit = {1,0}
+	end
+	position_adjusment = math2d.position.add(position_adjusment,unit)
+	position = math2d.position.add(entity.position, position_adjusment)
+	i=1
+	while math.abs((position.x-entity.position.x)+(position.y-entity.position.y)) < 11 do
+		rail = entity.surface.create_entity({
+			name = "straight-rail",
+			position = position,
+			direction = entity.direction,
+			force = entity.force,
+			raise_built = true,
+			create_build_effect_smoke = false,
+			player = player
+		})
+		position_adjusment = math2d.position.add(position_adjusment,unit)
+		position = math2d.position.add(entity.position, position_adjusment)
+		if rail == nil then
+			success = false
+		else
+			rail.rotatable = false
+			rail.destructible = false
+			table.insert(rails,rail)
+		end
+	end
+
+	return rails
+end
+
 local function build_mask(entity,player,name)
 	mask = entity.surface.create_entity({
 		name = string.gsub(name, '-placer', '') .. "-mask",
-		position = math2d.position.add(entity.position, constants.PLACER_TO_TUNNEL_SHIFT_BY_DIRECTION[entity.direction]),
+		position = entity.position,
 		direction = entity.direction,
 		force = entity.force,
 		raise_built = true,
@@ -88,6 +128,21 @@ end
 
 local function handleTrainTunnelPlacerBuilt(entity, player)
 	-- Swap the placer out for the real thing
+	if ((entity.direction == defines.direction.north or entity.direction == defines.direction.south)
+	and entity.position.x%2 == 0)
+	or ((entity.direction == defines.direction.east or entity.direction == defines.direction.west)
+	and entity.position.y%2 == 0) then
+		local dst = player or game
+		dst.print("tunnel must align to the rail")
+		if entity.name == "TrainTunnelT1-placer" then
+			player.clear_cursor()
+		else
+			player.cursor_stack.clear()
+		end
+		player.cursor_stack.set_stack({name=string.gsub(entity.name, '-placer', '') .. "Item"})
+		entity.destroy({raise_destroy = true})
+		return true
+	end
 
 	if entity.name == "TrainTunnelT1-placer" then
 		name = "TrainTunnelT1-placer"
@@ -98,7 +153,7 @@ local function handleTrainTunnelPlacerBuilt(entity, player)
 		entrance = pairing_target(player)
 		type = "Exit"
 	end
-
+	rails = build_rails(entity,player)
 	valid_mask, mask = build_mask(entity,player,name)
 	valid_components, components = build_components(entity,player,name,type)
 	
@@ -111,6 +166,7 @@ local function handleTrainTunnelPlacerBuilt(entity, player)
 		global.Tunnels[mask.unit_number].tunnel = components[1]
 		table.remove(components,1)
 		global.Tunnels[mask.unit_number].components = components
+		global.Tunnels[mask.unit_number].rails = rails
 		global.Tunnels[mask.unit_number].pairing = false
 		global.Tunnels[mask.unit_number].timer = 0
 		global.Tunnels[mask.unit_number].train = nil
@@ -142,6 +198,9 @@ local function handleTrainTunnelPlacerBuilt(entity, player)
 			destroy(components[i])
 		end
 		destroy(mask)
+		for i=1,#rails,1 do
+			destroy(rails[i])
+		end
 	end
 	entity.destroy({raise_destroy = true})
 end

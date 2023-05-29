@@ -3,12 +3,12 @@ local constants = require('constants')
 
 local function detect_train(train,type,direction)
 	if type == "Train" then
-		left_top = constants.TRAIN_DETECTION_RANGE[direction]
+		left_top = constants.TRAIN_DETECTION_RANGE[direction][1]
+		right_down = constants.TRAIN_DETECTION_RANGE[direction][2]
 	else
-		left_top = constants.CARRIAGE_DETECTION_RANGE[direction]
+		left_top = constants.CARRIAGE_DETECTION_RANGE[direction][1]
+		right_down = constants.CARRIAGE_DETECTION_RANGE[direction][2]
 	end
-
-	right_down = math2d.position.multiply_scalar(left_top,-1)
 
 	left_top = math2d.position.add(train.destination.tunnel.position,left_top)
 	right_down = math2d.position.add(train.destination.tunnel.position,right_down)

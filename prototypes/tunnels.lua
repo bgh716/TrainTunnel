@@ -15,24 +15,57 @@ local function makeTunnelItem(name, icon, placerEntity)
 end
 
 local function makeTunnelPlacerEntity(name, icon, pictureFileName, placerItem)
+	if name == "TrainTunnelT2-placer" then
+		minable = {mining_time = 0.5}
+	else
+		minable = {mining_time = 0.5, result = placerItem}
+	end
 	return {
-		type = "rail-signal",
+		type = "simple-entity-with-owner",
 		name = name,
 		icon = icon,
 		icon_size = 64,
-		flags = {"filter-directions", "fast-replaceable-no-build-while-moving"},
-		minable = {mining_time = 0.5, result = placerItem},-- Minable so they can get the item back if the placer swap bugs out
+		flags = {"player-creation", "hidden", "not-on-map","not-selectable-in-game","not-deconstructable"},
+		minable = minable,-- Minable so they can get the item back if the placer swap bugs out
 		render_layer = "higher-object-under",
-		collision_mask = {"floor-layer", "rail-layer", "item-layer", "water-tile", "object-layer"}, -- "water-tile" makes it compatible with Space Explotation because for some reason it changes signal collison masks and all signals have to have at least one overlapping collision mask
+		collision_mask = {"floor-layer", "rail-layer", "item-layer", "water-tile", "object-layer","train-layer"}, -- "water-tile" makes it compatible with Space Explotation because for some reason it changes signal collison masks and all signals have to have at least one overlapping collision mask
+		selection_box = {{-2, -10.5}, {2, 10.5}},
 		selection_priority = 100,
-		collision_box = {{-0.01, -2.35}, {2.25, 1.30}},
-		selection_box = {{-0.01, -2.35}, {2.25, 1.30}},
-		animation = {
-			filename = pictureFileName,
-			width = 500,
-			height = 500,
-			frame_count = 1,
-			direction_count = 4
+		collision_box = {{-2, -10.5}, {2, 10.5}},
+		picture = {
+			-- Shifts are inverted because the sprites are pre-shifted to be at the tunnel position already
+			north = {
+				filename = pictureFileName,
+				width = 500,
+				height = 500,
+				y = 0,
+				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.north], -1),
+				scale = 1.4
+			},
+			east = {
+				filename = pictureFileName,
+				width = 500,
+				height = 500,
+				y = 500,
+				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.east], -1),
+				scale = 1.2
+			},
+			south = {
+				filename = pictureFileName,
+				width = 500,
+				height = 500,
+				y = 1000,
+				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.south], -1),
+				scale = 1.4
+			},
+			west = {
+				filename = pictureFileName,
+				width = 500,
+				height = 500,
+				y = 1500,
+				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.west], -1),
+				scale = 1.2
+			},
 		}
 	}
 end
@@ -57,9 +90,46 @@ local function makeTunnelEntity(name, icon, pictureFileName, placerItem)
 		
 		max_health = HP,
 		render_layer = "higher-object-under",
-		selection_box = {{-0.01, -0.01}, {1.9, 0.01}},
+		selection_box = {{-2, -0.01}, {2, 0.01}},
 		selection_priority = 100,
-		collision_box = {{-0.01, -0.01}, {1.9, 0.01}},
+		collision_box = {{-1, -0.01}, {1, 0.01}},
+		collision_mask = {"train-layer"},
+		render_layer = "lower-object-above-shadow",
+		pictures = {
+			direction_count = 1,
+			filename = "__core__/graphics/empty.png",
+			width = 1,
+			height = 1
+		},
+		
+		
+		resistances = resists
+	}
+end
+
+local function makeBlockEntity(name, icon, pictureFileName, placerItem)
+	local impact = 100
+	local HP = 500
+	local resists =
+		{
+			{
+			  type = "impact",
+			  percent = impact
+			}
+		}
+
+	return {
+		type = "simple-entity-with-owner", -- Simplist entity that has 4 diections of sprites
+		name = name,
+		icon = icon,
+		icon_size = 64,
+		flags = {"player-creation", "hidden", "not-on-map","not-selectable-in-game","not-deconstructable"},
+		
+		max_health = HP,
+		render_layer = "higher-object-under",
+		selection_box = {{-2, -0.01}, {2, 0.01}},
+		selection_priority = 100,
+		collision_box = {{-1, -0.01}, {1, 0.01}},
 		collision_mask = {"train-layer"},
 		render_layer = "lower-object-above-shadow",
 		pictures = {
@@ -103,9 +173,9 @@ local function makeMaskEntity(name, icon, pictureFileName, placerItem)
 		max_health = HP,
 		minable = minable,
 		render_layer = "higher-object-under",
-		selection_box = {{-0.01, -3}, {2, 6.5}},
+		selection_box = {{-2, -10.5}, {2, 10.5}},
 		selection_priority = 100,
-		collision_box = {{-0.01, -3}, {2, 6.5}},
+		collision_box = {{-2, -10.5}, {2, 10.5}},
 		collision_mask = {},
 		render_layer = "higher-object-above",
 		picture = {
@@ -116,7 +186,7 @@ local function makeMaskEntity(name, icon, pictureFileName, placerItem)
 				height = 500,
 				y = 0,
 				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.north], -1),
-				scale = 1.5
+				scale = 1.4
 			},
 			east = {
 				filename = pictureFileName,
@@ -124,7 +194,7 @@ local function makeMaskEntity(name, icon, pictureFileName, placerItem)
 				height = 500,
 				y = 500,
 				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.east], -1),
-				scale = 1.5
+				scale = 1.2
 			},
 			south = {
 				filename = pictureFileName,
@@ -132,7 +202,7 @@ local function makeMaskEntity(name, icon, pictureFileName, placerItem)
 				height = 500,
 				y = 1000,
 				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.south], -1),
-				scale = 1.5
+				scale = 1.4
 			},
 			west = {
 				filename = pictureFileName,
@@ -140,7 +210,7 @@ local function makeMaskEntity(name, icon, pictureFileName, placerItem)
 				height = 500,
 				y = 1500,
 				shift = util.mul_shift(constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION[defines.direction.west], -1),
-				scale = 1.5
+				scale = 1.2
 			},
 		},
 		placeable_by = placeable_by, -- Controls `q` and blueprint behavior
@@ -170,7 +240,7 @@ local function makeGarageEntity(name, icon, pictureFileName, placerItem)
 		render_layer = "higher-object-under",
 		selection_box = {{-0.01, -0.01}, {0.01, 0.01}},
 		selection_priority = 100,
-		collision_box = {{-0.01, -0.01}, {2, 6.5}},
+		collision_box = {{-2, -3.5}, {2, 7}},
 		collision_mask = {"player-layer"},
 		render_layer = "lower-object-above-shadow",
 		pictures = {
@@ -205,7 +275,7 @@ local function makeWallEntity(name, icon, pictureFileName, placerItem)
 		render_layer = "higher-object-under",
 		selection_box = {{-0.01, -0.01}, {0.01, 0.01}},
 		selection_priority = 100,
-		collision_box = {{-0.01, -3}, {1, 6.5}},
+		collision_box = {{-0.5, -10.5}, {0.5, 10.5}},
 		collision_mask = {"rail-layer"},
 		render_layer = "lower-object-above-shadow",
 		pictures = {
@@ -243,6 +313,14 @@ local function makeTunnelPrototypes(baseName)
 		-- Make the tunnel collision
 		makeTunnelEntity(
 			baseName,
+			iconFilename,
+			"__core__/graphics/empty.png",
+			itemName
+		),
+
+		-- Make the block reverse way
+		makeTunnelEntity(
+			baseName .. '-block',
 			iconFilename,
 			"__core__/graphics/empty.png",
 			itemName
