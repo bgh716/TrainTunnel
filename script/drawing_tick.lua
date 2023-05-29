@@ -1,5 +1,5 @@
-local function create_path(drawing_car)
-	path = tunnel.surface.create_entity
+local function create_path(drawing_car,tunnel)
+	path = tunnel.tunnel.surface.create_entity
 		({
 			name = "path",
 			position = drawing_car.position,
@@ -13,7 +13,7 @@ local function create_path(drawing_car)
 end
 
 local function draw_path(tunnel)
-    path = create_path(tunnel.drawing_car)
+    path = create_path(tunnel.drawing_car,tunnel)
     table.insert(tunnel.drew,path)
 end
 

@@ -39,16 +39,16 @@ Constants.PLACER_TO_GARAGE_SHIFT_BY_DIRECTION[defines.direction.south] = { 0,  0
 Constants.PLACER_TO_GARAGE_SHIFT_BY_DIRECTION[defines.direction.west]  = { 0, 0 }
 
 Constants.TRAIN_DETECTION_RANGE = {}
-Constants.TRAIN_DETECTION_RANGE[defines.direction.north] = {{-1, 0},{1,20}}
-Constants.TRAIN_DETECTION_RANGE[defines.direction.east]  = {{-20,-1},{0,1}}
-Constants.TRAIN_DETECTION_RANGE[defines.direction.south] = {{-1,-20},{1,0}}
-Constants.TRAIN_DETECTION_RANGE[defines.direction.west]  = {{0,-1},{20,1}}
+Constants.TRAIN_DETECTION_RANGE[defines.direction.north] = {{-2, 0},{2,20}}
+Constants.TRAIN_DETECTION_RANGE[defines.direction.east]  = {{-20,-2},{0,2}}
+Constants.TRAIN_DETECTION_RANGE[defines.direction.south] = {{-2,-20},{2,0}}
+Constants.TRAIN_DETECTION_RANGE[defines.direction.west]  = {{0,-2},{20,2}}
 
 Constants.CARRIAGE_DETECTION_RANGE = {}
-Constants.CARRIAGE_DETECTION_RANGE[defines.direction.north] = {{-1,0},{1,4.5}}
-Constants.CARRIAGE_DETECTION_RANGE[defines.direction.east]  = {{-3,  -1},{0,1}}
-Constants.CARRIAGE_DETECTION_RANGE[defines.direction.south] = {{-1,-4.5},{1,0}}
-Constants.CARRIAGE_DETECTION_RANGE[defines.direction.west]  = {{ 0,  -1},{3,1}}
+Constants.CARRIAGE_DETECTION_RANGE[defines.direction.north] = {{-2,0},{2,4.5}}
+Constants.CARRIAGE_DETECTION_RANGE[defines.direction.east]  = {{-3,  -2},{0,2}}
+Constants.CARRIAGE_DETECTION_RANGE[defines.direction.south] = {{-2,-4.5},{2,0}}
+Constants.CARRIAGE_DETECTION_RANGE[defines.direction.west]  = {{ 0,  -2},{3,2}}
 
 -- wall
 Constants.PLACER_TO_WALL_SHIFT_BY_DIRECTION = {}
