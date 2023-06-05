@@ -366,32 +366,25 @@ data:extend({
 		type = "recipe",
 		name = "TrainTunnelT1Recipe",
 		enabled = false,
-		energy_required = 2,
+		energy_required = 5,
 		ingredients =
 			{
-				{"accumulator", 2},
-				{"substation", 2},
-				{"steel-plate", 200},
-				{"advanced-circuit", 50}
+				{"concrete", 40},
+				{"rail", 40},
+				{"rail-signal", 5}
 			},
 		result = "TrainTunnelT1Item"
 	}
 })
 -- Add recipes for Tunnel
 data:extend({
-
 	{ --------- Tunnel recipie ----------
 		type = "recipe",
 		name = "TrainTunnelT2Recipe",
 		enabled = false,
-		energy_required = 2,
+		energy_required = 5,
 		ingredients =
-			{
-				{"accumulator", 2},
-				{"substation", 2},
-				{"steel-plate", 200},
-				{"advanced-circuit", 50}
-			},
+			{ {"TrainTunnelT1Item", 1} },
 		result = "TrainTunnelT2Item"
 	}
 })
