@@ -36,7 +36,7 @@ local function build_components(entity,player,name,type)
 	for i=1, #constants.COMPONENT_POSITIONS,1 do
 		position_adjusment = get_component_position(constants.COMPONENT_POSITIONS[i],entity.direction)
 		newName = get_name(name,constants.COMPONENT_NAMES[i])
-		game.print(position_adjusment)
+		--game.print(position_adjusment)
 		component = entity.surface.create_entity({
 			name = newName,
 			position = math2d.position.add(entity.position, position_adjusment),
