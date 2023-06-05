@@ -43,7 +43,7 @@ local function test(event)
             global.Tunnels[Entrance].drawing_tick = math.ceil(game.tick + math.abs(global.Tunnels[Entrance].distance/(constants.SPEED_COEFF*constants.GHOST_SPEED)))
             global.Tunnels[Entrance].drew = {}
         else
-            game.print("this tunnel not paired or drawing path already")
+            --game.print("this tunnel not paired or drawing path already")
         end
 	end
 end

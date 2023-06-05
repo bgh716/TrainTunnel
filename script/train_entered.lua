@@ -156,7 +156,7 @@ local function train_entered(event,uarea,TrainInTunnel,Exit,Entrance)
 	--ontick loop combine-----------------------------------
 	if ghostCar == nil or TempTrain == nil or TempTrain2 == nil then
 		TrainInTunnel = nil
-		game.print("temp creation failed")
+		--game.print("temp creation failed")
 		return
 	end
 
@@ -200,7 +200,7 @@ end
 local function train_entered_handler(event)
 	valid_collision, uarea, Entrance, Exit = collision_check(event,1)
 
-	game.print(valid_collision)
+	--game.print(valid_collision)
 	--train entering tunnel
 	if valid_collision and event.cause.type == "locomotive" then 
 		global.Tunnels[Entrance].train = {}

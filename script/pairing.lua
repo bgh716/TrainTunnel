@@ -20,10 +20,10 @@ local function test(event)
 			global.Tunnels[tunnel.unit_number].player = player.index
 			player.cursor_stack.set_stack({name="TrainTunnelT2Item", count=1})
 		else
-			game.print("tunnel is on paired or under paring or user is already doing another paring")
+			--game.print("tunnel is on paired or under paring or user is already doing another paring")
 		end
 	else
-		game.print("tunnel not found")
+		--game.print("tunnel not found")
 	end
 end
 
