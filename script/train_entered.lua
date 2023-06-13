@@ -25,6 +25,7 @@ local function collision_check(event, range)
 	mask = find_mask(event.entity)
 	if (
 		event.cause
+		and event.cause.type == "locomotive"
 		and event.entity.name == "TrainTunnelT1"
 		and global.Tunnels[mask].paired == true
 		and (
@@ -48,7 +49,6 @@ local function create_temp_train(event,position,type)
 					name = "ghostLocomotiveTT",
 					position = position,
 					force = event.cause.force,
-					--orientation = event.cause.orientation,
 					raise_built = false,
 				})
 	if tempTrain then
@@ -71,7 +71,7 @@ local function copy_train(event,TrainInTunnel,tunnel_exit)
 	TrainInTunnel.remaining_burning_fuel = event.cause.burner.remaining_burning_fuel
 	TrainInTunnel.fuel_inventory = event.cause.get_fuel_inventory().get_contents()
 	TrainInTunnel.len_carriages = #event.cause.train.carriages
-	TrainInTunnel.real_carriages = event.cause.train.carriages
+	--TrainInTunnel.real_carriages = event.cause.train.carriages
 
 	--save carriage information
 	if #event.cause.train.carriages > 1 then
@@ -157,7 +157,7 @@ local function train_entered(event, uarea, tunnel_entrance, tunnel_exit)
 
 	--ontick loop combine-----------------------------------
 	if ghostCar == nil or tempTrain == nil or tempTrain2 == nil then
-		trainInTunnel = nil
+		trainInTunnel = {}
 		--game.print("temp creation failed")
 		return
 	end
@@ -179,10 +179,10 @@ local function train_entered(event, uarea, tunnel_entrance, tunnel_exit)
 	
 	--copy train information
 	copy_train(event, trainInTunnel, tunnel_exit)
-	if (trainInTunnel.len_carriages > 1) then
-		trainInTunnel.real_carriages[2].train.speed = speed
-		trainInTunnel.real_carriages[2].orientation = event.cause.orientation
-	end
+	--if (trainInTunnel.len_carriages > 1) then
+	--	trainInTunnel.real_carriages[2].train.speed = speed
+	--	trainInTunnel.real_carriages[2].orientation = event.cause.orientation
+	--end
 
 	--transfer passenger to ghost car
 	if (event.cause.get_driver()) then

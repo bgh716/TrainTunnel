@@ -152,7 +152,7 @@ end
 local function train_handler(event,train,tunnel,index)
 	if train.arrived == false then
 		--search_tunnel(train)
-		if train.land_tick == game.tick then
+		if train.land_tick <= game.tick then
 			train.arrived = true
 			train.ghostCar.speed = 0
 		end
@@ -164,7 +164,7 @@ end
 local function train_process(event)
 	index = 1
 	for unit,tunnel in pairs(global.Tunnels) do
-		if tunnel.train ~= {} then
+		if next(tunnel.train) ~= nil then
 			train = tunnel.train
 			train_handler(event,train,tunnel,index)
 		end
