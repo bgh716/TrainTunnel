@@ -24,7 +24,7 @@ local function detect_train(train,type,direction)
 	return false
 end
 
-local function load_train(train)
+local function load_train(train, tunnel)
 	train.TempTrain2.destroy()
 	NewTrain = train.ghostCar.surface.create_entity({
 			name = train.name,
@@ -34,7 +34,11 @@ local function load_train(train)
 			raise_built = true
 			})
 	if NewTrain then
-		NewTrain.train.speed = 0.5			
+		if (tunnel.trainSpeed) then
+			NewTrain.train.speed = tunnel.trainSpeed
+		else
+			NewTrain.train.speed = 0.5
+		end
 		NewTrain.backer_name = train.backer_name
 		NewTrain.color = train.color
 		NewTrain.train.manual_mode = train.manual_mode		
@@ -96,13 +100,13 @@ local function search_tunnel(train)
 	end
 end
 
-local function arrived_tunnel_handler(event,train,tunnel,index)
+local function arrived_tunnel_handler(event, train, tunnel, index)
 	Exit_Direction = global.Tunnels[tunnel.paired_to].tunnel.direction
 
-	if train.escape_done == false and train.head_escaped == false then
-		if not detect_train(train,"Train",Exit_Direction) then
+	if train.head_escaped == false then
+		if not detect_train(train,"Train", Exit_Direction) then
 			--create new train
-			NewTrain = load_train(train)
+			NewTrain = load_train(train, tunnel)
 
 			if NewTrain then
 				--transfer passenger
@@ -124,7 +128,7 @@ local function arrived_tunnel_handler(event,train,tunnel,index)
 				end
 			end
 		end
-	elseif train.escape_done == false and train.head_escaped == true then
+	elseif train.head_escaped == true then
 		if not detect_train(train,"Carriage",Exit_Direction) then
 			NewCarriage = load_carriage(train)
 			if NewCarriage then

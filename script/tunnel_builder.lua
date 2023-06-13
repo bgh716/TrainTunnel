@@ -146,11 +146,11 @@ local function handleTrainTunnelPlacerBuilt(entity, player)
 
 	if entity.name == "TrainTunnelT1-placer" then
 		name = "TrainTunnelT1-placer"
-		entrance = "dummy"
+		entranceId = "dummy"
 		type = "Entrance"
 	elseif entity.name == "TrainTunnelT2-placer" then
 		name = "TrainTunnelT2-placer"
-		entrance = pairing_target(player)
+		entranceId = pairing_target(player)
 		type = "Exit"
 	end
 	rails = build_rails(entity,player)
@@ -158,7 +158,7 @@ local function handleTrainTunnelPlacerBuilt(entity, player)
 	valid_components, components = build_components(entity,player,name,type)
 	
 
-	if valid_mask and valid_components and entrance then
+	if valid_mask and valid_components and entranceId then
 		
 		global.Tunnels[mask.unit_number] = {}
 		global.Tunnels[mask.unit_number].mask = mask
@@ -170,6 +170,7 @@ local function handleTrainTunnelPlacerBuilt(entity, player)
 		global.Tunnels[mask.unit_number].pairing = false
 		global.Tunnels[mask.unit_number].timer = 0
 		global.Tunnels[mask.unit_number].train = {}
+		global.Tunnels[mask.unit_number].trainSpeed = 0
 		if name == "TrainTunnelT1-placer" then
 			global.Tunnels[mask.unit_number].player = player.index
 			global.Tunnels[mask.unit_number].paired = false
@@ -178,17 +179,17 @@ local function handleTrainTunnelPlacerBuilt(entity, player)
 			player.clear_cursor()
 			player.cursor_stack.set_stack({name="TrainTunnelT2Item"})
 		elseif name == "TrainTunnelT2-placer" then
-			distance = math2d.position.distance(global.Tunnels[mask.unit_number].tunnel.position, global.Tunnels[entrance].tunnel.position)
+			distance = math2d.position.distance(global.Tunnels[mask.unit_number].tunnel.position, global.Tunnels[entranceId].tunnel.position)
 			global.Tunnels[mask.unit_number].type = "exit"
-			global.Tunnels[mask.unit_number].paired_to = entrance
+			global.Tunnels[mask.unit_number].paired_to = entranceId
 			global.Tunnels[mask.unit_number].paired = true
 			global.Tunnels[mask.unit_number].distance = distance
-			global.Tunnels[entrance].paired_to = mask.unit_number
-			global.Tunnels[entrance].paired = true
-			global.Tunnels[entrance].pairing = false
-			global.Tunnels[entrance].timer = 0
-			global.Tunnels[entrance].player = nil
-			global.Tunnels[entrance].distance = distance
+			global.Tunnels[entranceId].paired_to = mask.unit_number
+			global.Tunnels[entranceId].paired = true
+			global.Tunnels[entranceId].pairing = false
+			global.Tunnels[entranceId].timer = 0
+			global.Tunnels[entranceId].player = nil
+			global.Tunnels[entranceId].distance = distance
 			player.cursor_stack.clear()
 		end	
 	else
