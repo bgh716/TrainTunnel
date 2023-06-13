@@ -25,11 +25,10 @@ local function collision_check(event, range)
 	mask = find_mask(event.entity)
 	if (
 		(event.cause
-		and event.entity.name == "TrainTunnelT1" and global.Tunnels[mask]
+		and event.entity.name == "TrainTunnelT1"
 		and global.Tunnels[mask].paired == true
-		and global.Tunnels[mask].train == nil)
-		or (global.Tunnels[mask]
-			and global.Tunnels[mask].train
+		and #global.Tunnels[mask].train == 0)
+		or (#global.Tunnels[mask].train > 0
 			and (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon"))
 	) then 
 		entrance = mask
@@ -204,12 +203,11 @@ local function train_entered_handler(event)
 
 	--game.print(valid_collision)
 	--train entering tunnel
-	if valid_collision and event.cause.type == "locomotive" then 
-		global.Tunnels[Entrance].train = {}
+	if valid_collision and event.cause.type == "locomotive" then
 		TrainInTunnel = global.Tunnels[Entrance].train
 		train_entered(event,uarea,TrainInTunnel,Exit,Entrance)
 	--carriages entering tunnel
-	elseif valid_collision and (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon") and global.Tunnels[Entrance].train and global.Tunnels[Entrance].train.escape_done == false then
+	elseif valid_collision and (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon") then
 		global.Tunnels[Entrance].train.entered_carriages = global.Tunnels[Entrance].train.entered_carriages + 1
 		if (TrainInTunnel.len_carriages > TrainInTunnel.entered_carriages) then
 			event.cause.train.carriages[TrainInTunnel.entered_carriages+1].train.speed = constants.GHOST_SPEED

@@ -98,12 +98,8 @@ end
 
 local function arrived_tunnel_handler(event,train,tunnel,index)
 	Exit_Direction = global.Tunnels[tunnel.paired_to].tunnel.direction
-	if train.escape_done == true and train.head_escaped == true then
-		train.ghostCar.destroy()
-		train.TempTrain.destroy()
-		tunnel.train.real_carriages = nil
-		tunnel.train = nil
-	elseif train.escape_done == false and train.head_escaped == false then
+
+	if train.escape_done == false and train.head_escaped == false then
 		if not detect_train(train,"Train",Exit_Direction) then
 			--create new train
 			NewTrain = load_train(train)
@@ -117,9 +113,9 @@ local function arrived_tunnel_handler(event,train,tunnel,index)
 						NewTrain.set_driver(train.passenger.player)
 					end
 				end
-		
+
 				train.head_escaped = true
-			
+
 				if train.entered_carriages == 1 then
 					train.escape_done = true
 				else
@@ -139,6 +135,13 @@ local function arrived_tunnel_handler(event,train,tunnel,index)
 				end
 			end
 		end
+	end
+
+	if train.escape_done == true and train.head_escaped == true then
+		train.ghostCar.destroy()
+		train.TempTrain.destroy()
+		tunnel.train.real_carriages = nil
+		tunnel.train = {}
 	end
 end
 
