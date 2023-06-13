@@ -58,6 +58,7 @@ end
 
 local function load_carriage(train)
 	if train.newTrain.valid then
+		local manual_mode = train.manual_mode
 		NewCarriage = train.ghostCar.surface.create_entity({
 				name = train.carriages[train.num].type,
 				position = train.exit_position,
@@ -68,7 +69,7 @@ local function load_carriage(train)
 		if NewCarriage then
 
 			NewCarriage.connect_rolling_stock(defines.rail_direction.front)
-			train.newTrain.train.manual_mode = train.manual_mode
+			train.newTrain.train.manual_mode = manual_mode
 
 			if (NewCarriage.type == "cargo-wagon") then
 				NewCarriage.get_inventory(defines.inventory.cargo_wagon).set_bar(train.carriages[train.num].bar)
@@ -144,7 +145,6 @@ local function arrived_tunnel_handler(event, train, tunnel, index)
 	if train.escape_done == true and train.head_escaped == true then
 		train.ghostCar.destroy()
 		train.TempTrain.destroy()
-		tunnel.train.real_carriages = nil
 		tunnel.train = {}
 	end
 end

@@ -24,12 +24,14 @@ end
 local function collision_check(event, range)
 	mask = find_mask(event.entity)
 	if (
-		(event.cause
+		event.cause
 		and event.entity.name == "TrainTunnelT1"
 		and global.Tunnels[mask].paired == true
-		and #global.Tunnels[mask].train == 0)
-		or (#global.Tunnels[mask].train > 0
-			and (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon"))
+		and (
+			next(global.Tunnels[mask].train) == nil
+			or (next(global.Tunnels[mask].train) ~= nil
+				and (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon"))
+		)
 	) then 
 		entranceId = mask
 		exitId = global.Tunnels[mask].paired_to
@@ -46,14 +48,11 @@ local function create_temp_train(event,position,type)
 					name = "ghostLocomotiveTT",
 					position = position,
 					force = event.cause.force,
-					orientation = event.cause.orientation,
+					--orientation = event.cause.orientation,
 					raise_built = false,
 				})
 	if tempTrain then
 		tempTrain.destructible = false
-		if type == "entrance" then
-			remote.call("logistic-train-network", "reassign_delivery", event.cause.train.id, tempTrain.train)
-		end
 	end
 
 	return tempTrain
@@ -150,7 +149,9 @@ local function train_entered(event, uarea, tunnel_entrance, tunnel_exit)
 	local trainInTunnel = tunnel_entrance.train
 	--create ghost train to save the LTN schedule
 	tempTrain = create_temp_train(event,temp1_position,"entrance")
+	remote.call("logistic-train-network", "reassign_delivery", event.cause.train.id, tempTrain.train)
 	trainInTunnel.TempTrain  = tempTrain
+
 	tempTrain2 = create_temp_train(event,temp2_position,"exit")
 	trainInTunnel.TempTrain2 = tempTrain2
 
@@ -223,7 +224,7 @@ local function train_entered_handler(event)
 		end
 	end
 
-	event.cause.destroy({ raise_destroy = true })
+	event.cause.destroy()
 end
 
 local function entity_damaged(event)
