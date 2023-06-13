@@ -29,7 +29,7 @@ local function collision_check(event, range)
 		and event.entity.name == "TrainTunnelT1"
 		and global.Tunnels[mask].paired == true
 		and (
-			next(global.Tunnels[mask].train) == nil
+			(next(global.Tunnels[mask].train) == nil and event.cause.type == "locomotive")
 			or (next(global.Tunnels[mask].train) ~= nil
 				and (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon"))
 		)
@@ -219,12 +219,15 @@ local function train_entered_handler(event)
 	elseif (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon") then
 		local trainInTunnel = tunnel_entrance.train
 		trainInTunnel.entered_carriages = trainInTunnel.entered_carriages + 1
-		if (trainInTunnel.len_carriages > trainInTunnel.entered_carriages) then
-			event.cause.train.carriages[trainInTunnel.entered_carriages+1].train.speed = event.cause.speed
-		end
 	end
 
+	local nextCarriage, _ = event.cause.get_connected_rolling_stock(defines.rail_direction.back)
+	event.cause.disconnect_rolling_stock(defines.rail_direction.back)
 	event.cause.destroy()
+	if (nextCarriage ~= nil) then
+		nextCarriage.train.schedule = nil
+		nextCarriage.train.speed = tunnel_entrance.trainSpeed
+	end
 end
 
 local function entity_damaged(event)
