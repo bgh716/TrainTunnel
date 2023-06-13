@@ -102,7 +102,7 @@ local function arrived_tunnel_handler(event,train,tunnel,index)
 	if train.escape_done == true and train.head_escaped == true then
 		train.ghostCar.destroy()
 		train.TempTrain.destroy()
-		
+		tunnel.train.real_carriages = nil
 		tunnel.train = nil
 	elseif train.escape_done == false and train.head_escaped == false then
 		if not detect_train(train,"Train",Exit_Direction) then

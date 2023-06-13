@@ -47,7 +47,8 @@ local function create_temp_train(event,position,type)
 					name = "ghostLocomotiveTT",
 					position = position,
 					force = event.cause.force,
-					raise_built = false
+					direction = event.cause.direction,
+					raise_built = false,
 				})
 	if TempTrain then
 		TempTrain.destructible = false
@@ -175,7 +176,8 @@ local function train_entered(event,uarea,TrainInTunnel,Exit,Entrance)
 	--copy train information
 	copy_train(event,TrainInTunnel,Exit)
 	if (TrainInTunnel.len_carriages > 1) then
-		TrainInTunnel.real_carriages[2] = constants.GHOST_SPEED
+		TrainInTunnel.real_carriages[2].train.speed = constants.GHOST_SPEED
+		TrainInTunnel.real_carriages[2].direction = -event.cause.direction
 	end
 
 	--transfer passenger to ghost car
@@ -210,7 +212,7 @@ local function train_entered_handler(event)
 	elseif valid_collision and (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon") and global.Tunnels[Entrance].train and global.Tunnels[Entrance].train.escape_done == false then
 		global.Tunnels[Entrance].train.entered_carriages = global.Tunnels[Entrance].train.entered_carriages + 1
 		if (TrainInTunnel.len_carriages > TrainInTunnel.entered_carriages) then
-			event.cause.train.carriages[TrainInTunnel.entered_carriages+1] = constants.GHOST_SPEED
+			event.cause.train.carriages[TrainInTunnel.entered_carriages+1].train.speed = constants.GHOST_SPEED
 		end
 		event.cause.destroy({ raise_destroy = true })
 	end
