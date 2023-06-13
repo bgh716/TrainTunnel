@@ -66,7 +66,6 @@ local function load_carriage(train)
 			NewCarriage.connect_rolling_stock(defines.rail_direction.front)
 			train.newTrain.train.manual_mode = train.manual_mode
 
-
 			if (NewCarriage.type == "cargo-wagon") then
 				NewCarriage.get_inventory(defines.inventory.cargo_wagon).set_bar(train.carriages[train.num].bar)
 				for i, filter in pairs(train.carriages[train.num].filter) do
