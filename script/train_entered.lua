@@ -201,14 +201,14 @@ end
 local function train_entered_handler(event)
 	valid_collision, uarea, Entrance, Exit = collision_check(event,1)
 
+	TrainInTunnel = global.Tunnels[Entrance].train
 	--game.print(valid_collision)
 	--train entering tunnel
 	if valid_collision and event.cause.type == "locomotive" then
-		TrainInTunnel = global.Tunnels[Entrance].train
 		train_entered(event,uarea,TrainInTunnel,Exit,Entrance)
 	--carriages entering tunnel
 	elseif valid_collision and (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon") then
-		global.Tunnels[Entrance].train.entered_carriages = global.Tunnels[Entrance].train.entered_carriages + 1
+		TrainInTunnel.entered_carriages = TrainInTunnel.entered_carriages + 1
 		if (TrainInTunnel.len_carriages > TrainInTunnel.entered_carriages) then
 			event.cause.train.carriages[TrainInTunnel.entered_carriages+1].train.speed = constants.GHOST_SPEED
 		end
