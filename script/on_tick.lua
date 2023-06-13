@@ -152,7 +152,7 @@ end
 local function train_handler(event,train,tunnel,index)
 	if train.arrived == false then
 		--search_tunnel(train)
-		if train.land_tick == game.tick then
+		if train.land_tick <= game.tick then
 			train.arrived = true
 			train.ghostCar.speed = 0
 		end
