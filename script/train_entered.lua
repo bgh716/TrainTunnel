@@ -27,8 +27,8 @@ local function collision_check(event, range)
 		(event.cause
 		and event.entity.name == "TrainTunnelT1"
 		and global.Tunnels[mask].paired == true
-		and #global.Tunnels[mask].train == 0)
-		or (#global.Tunnels[mask].train > 0
+		and next(global.Tunnels[mask].train) == nil)
+		or ( not (next(global.Tunnels[mask].train) == nil)
 			and (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon"))
 	) then 
 		entrance = mask
@@ -155,7 +155,7 @@ local function train_entered(event,uarea,TrainInTunnel,Exit,Entrance)
 
 	--ontick loop combine-----------------------------------
 	if ghostCar == nil or TempTrain == nil or TempTrain2 == nil then
-		TrainInTunnel = nil
+		TrainInTunnel = {}
 		--game.print("temp creation failed")
 		return
 	end
@@ -176,7 +176,7 @@ local function train_entered(event,uarea,TrainInTunnel,Exit,Entrance)
 	copy_train(event,TrainInTunnel,Exit)
 	if (TrainInTunnel.len_carriages > 1) then
 		TrainInTunnel.real_carriages[2].train.speed = constants.GHOST_SPEED
-		TrainInTunnel.real_carriages[2].orientation = event.cause.orientation
+		--TrainInTunnel.real_carriages[2].direction = event.cause.direction
 	end
 
 	--transfer passenger to ghost car
