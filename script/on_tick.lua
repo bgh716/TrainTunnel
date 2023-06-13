@@ -164,7 +164,7 @@ end
 local function train_process(event)
 	index = 1
 	for unit,tunnel in pairs(global.Tunnels) do
-		if not (next(tunnel.train) == nil) then
+		if next(tunnel.train) ~= nil then
 			train = tunnel.train
 			train_handler(event,train,tunnel,index)
 		end

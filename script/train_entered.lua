@@ -28,7 +28,7 @@ local function collision_check(event, range)
 		and event.entity.name == "TrainTunnelT1"
 		and global.Tunnels[mask].paired == true
 		and next(global.Tunnels[mask].train) == nil)
-		or ( not (next(global.Tunnels[mask].train) == nil)
+		or ( next(global.Tunnels[mask].train) ~= nil
 			and (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon"))
 	) then 
 		entranceId = mask
@@ -147,7 +147,7 @@ local function train_entered(event, uarea, tunnel_entrance, tunnel_exit)
 
 	ghostCar =  create_ghost_car(event,gc_position,orientation)
 
-	local trainInTunnel = tunnel_entrance.train
+	trainInTunnel = tunnel_entrance.train
 	--create ghost train to save the LTN schedule
 	tempTrain = create_temp_train(event,temp1_position,"entrance")
 	trainInTunnel.TempTrain  = tempTrain
@@ -156,7 +156,7 @@ local function train_entered(event, uarea, tunnel_entrance, tunnel_exit)
 
 	--ontick loop combine-----------------------------------
 	if ghostCar == nil or TempTrain == nil or TempTrain2 == nil then
-		TrainInTunnel = nil
+		TrainInTunnel = {}
 		--game.print("temp creation failed")
 		return
 	end
@@ -180,7 +180,6 @@ local function train_entered(event, uarea, tunnel_entrance, tunnel_exit)
 	copy_train(event,TrainInTunnel,Exit)
 	if (TrainInTunnel.len_carriages > 1) then
 		TrainInTunnel.real_carriages[2].train.speed = constants.GHOST_SPEED
-		TrainInTunnel.real_carriages[2].orientation = event.cause.orientation
 	end
 
 	--transfer passenger to ghost car
@@ -207,8 +206,8 @@ local function train_entered_handler(event)
 		return
 	end
 
-	local tunnel_entrance = global.Tunnels[entranceId]
-	local tunnel_exit = global.Tunnels[exitId]
+	tunnel_entrance = global.Tunnels[entranceId]
+	tunnel_exit = global.Tunnels[exitId]
 
 
 	--loco entering tunnel
@@ -216,7 +215,7 @@ local function train_entered_handler(event)
 		train_entered(event, uarea, tunnel_entrance, tunnel_exit)
 	--carriages entering tunnel
 	elseif (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon") then
-		local trainInTunnel = tunnel_entrance.train
+		trainInTunnel = tunnel_entrance.train
 		trainInTunnel.entered_carriages = trainInTunnel.entered_carriages + 1
 		if (trainInTunnel.len_carriages > trainInTunnel.entered_carriages) then
 			event.cause.train.carriages[trainInTunnel.entered_carriages+1].train.speed = event.cause.speed
