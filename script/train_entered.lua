@@ -175,7 +175,7 @@ local function train_entered(event,uarea,TrainInTunnel,Exit,Entrance)
 	--copy train information
 	copy_train(event,TrainInTunnel,Exit)
 	if (TrainInTunnel.len_carriages > 1) then
-		TrainInTunnel.real_carriages[2] = constants.GHOST_SPEED
+		TrainInTunnel.real_carriages[2].train.speed = constants.GHOST_SPEED
 		TrainInTunnel.real_carriages[2].orientation = event.cause.orientation
 	end
 

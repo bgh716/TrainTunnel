@@ -29,7 +29,7 @@ local function entity_destroyed(event)
 				if global.Tunnels[unum].train.TempTrain then global.Tunnels[unum].train.TempTrain.destroy() end
 				if global.Tunnels[unum].train.TempTrain2 then global.Tunnels[unum].train.TempTrain2.destroy() end
 				if global.Tunnels[unum].train.ghostCar then global.Tunnels[unum].train.ghostCar.destroy() end
-				global.Tunnels[unum].train = nil
+				global.Tunnels[unum].train = {}
 			end
 			for i=1,#global.Tunnels[paired].rails,1 do
 				global.Tunnels[paired].rails[i].destroy()
@@ -52,7 +52,7 @@ local function entity_destroyed(event)
 				if global.Tunnels[paired].train.TempTrain then global.Tunnels[paired].train.TempTrain.destroy() end
 				if global.Tunnels[paired].train.TempTrain2 then global.Tunnels[paired].train.TempTrain2.destroy() end
 				if global.Tunnels[paired].train.ghostCar then global.Tunnels[paired].train.ghostCar.destroy() end
-				global.Tunnels[paired].train = nil
+				global.Tunnels[paired].train = {}
 			end
 
 		end

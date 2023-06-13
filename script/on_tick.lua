@@ -160,7 +160,7 @@ end
 local function train_process(event)
 	index = 1
 	for unit,tunnel in pairs(global.Tunnels) do
-		if tunnel.train then
+		if tunnel.train ~= {} then
 			train = tunnel.train
 			train_handler(event,train,tunnel,index)
 		end

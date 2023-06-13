@@ -169,7 +169,7 @@ local function handleTrainTunnelPlacerBuilt(entity, player)
 		global.Tunnels[mask.unit_number].rails = rails
 		global.Tunnels[mask.unit_number].pairing = false
 		global.Tunnels[mask.unit_number].timer = 0
-		global.Tunnels[mask.unit_number].train = nil
+		global.Tunnels[mask.unit_number].train = {}
 		if name == "TrainTunnelT1-placer" then
 			global.Tunnels[mask.unit_number].player = player.index
 			global.Tunnels[mask.unit_number].paired = false
