@@ -22,7 +22,7 @@ local function create_ghost_car(Entrance,orientation)
 
 	SpookyGhost.orientation = orientation
 	SpookyGhost.operable = false
-	SpookyGhost.speed = constants.GHOST_SPEED--event.cause.speed
+	SpookyGhost.speed = math.max(event.cause.speed, Constants.TRAIN_MIN_SPEED)
 	SpookyGhost.destructible = false
 
 	return SpookyGhost
@@ -35,13 +35,13 @@ local function test(event)
 	if tunnel then
         if global.Tunnels[tunnel.unit_number].paired == true and global.Tunnels[tunnel.unit_number].drawing == false then
 		    global.Tunnels[tunnel.unit_number].drawing = true
-            Entrance = tunnel.unit_number
-            Exit = global.Tunnels[Entrance].paired_to
-            orientation = get_orientation(Exit,Entrance)
-            ghostCar = create_ghost_car(Entrance,orientation)
-            global.Tunnels[Entrance].drawing_car = ghostCar
-            global.Tunnels[Entrance].drawing_tick = math.ceil(game.tick + math.abs(global.Tunnels[Entrance].distance/(constants.SPEED_COEFF*constants.GHOST_SPEED)))
-            global.Tunnels[Entrance].drew = {}
+            entranceId = tunnel.unit_number
+            exitId = global.Tunnels[entranceId].paired_to
+            orientation = get_orientation(exitId, entranceId)
+            ghostCar = create_ghost_car(entranceId,orientation)
+            global.Tunnels[entranceId].drawing_car = ghostCar
+            global.Tunnels[entranceId].drawing_tick = math.ceil(game.tick + math.abs(global.Tunnels[entranceId].distance/constants.PATH_SPACING))
+            global.Tunnels[entranceId].drew = {}
         else
             --game.print("this tunnel not paired or drawing path already")
         end

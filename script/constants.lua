@@ -1,12 +1,12 @@
 Constants = {}
 
-Constants.GHOST_SPEED = 0.75
+Constants.TRAIN_MIN_SPEED = 0.5
+Constants.PATH_SPACING = 0.75
 Constants.PAIRING_TIMEOUT = 3000
 Constants.GC_RANGE =5.5 --gc
 Constants.TEMP1_RANGE = 5.5 --temp1
 Constants.TEMP2_RANGE = 1.5 --temp2
 Constants.EXIT_RANGE = 10 --exit
-Constants.SPEED_COEFF = 0.9
 Constants.RAILS = 11
 
 
