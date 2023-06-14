@@ -1,15 +1,6 @@
 local math2d = require('math2d')
 local constants = require('constants')
-
-local function get_orientation(Exit,Entrance)
-    x = global.Tunnels[Exit].tunnel.position.x - global.Tunnels[Entrance].tunnel.position.x
-    y = global.Tunnels[Exit].tunnel.position.y - global.Tunnels[Entrance].tunnel.position.y
-    res = (math.atan2(y, x)+(math.pi/2)) / (math.pi*2)
-    if res > 2*math.pi then
-        res = res - 2*math.pi
-    end
-    return res
-end
+require('util')
 
 local function create_ghost_car(Entrance,orientation)
     tunnel = global.Tunnels[Entrance].tunnel
@@ -37,7 +28,7 @@ local function start_drawing_path(event)
             global.Tunnels[tunnel.unit_number].path_is_drawing = true
             entranceId = tunnel.unit_number
             exitId = global.Tunnels[entranceId].paired_to
-            orientation = get_orientation(exitId, entranceId)
+            orientation = get_orientation_entity(entrance.entity, exit.entity)
             ghostCar = create_ghost_car(entranceId,orientation)
             global.Tunnels[entranceId].drawing_car = ghostCar
             global.Tunnels[entranceId].drawing_tick = math.ceil(game.tick + math.abs(global.Tunnels[entranceId].distance/constants.PATH_SPACING))

@@ -55,8 +55,8 @@ end
 
 function end_pairing(tunnel_index, player_index, paired)
     if paired then
-        local tunnelObj = global.Tunnels[tunnel_index]
-        tunnelObj.paired = true
+        local tunnel_obj = global.Tunnels[tunnel_index]
+        tunnel_obj.paired = true
     end
 
     local player = game.get_player(player_index)

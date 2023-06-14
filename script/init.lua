@@ -6,23 +6,25 @@ function on_init()
     -- key is unit number of mask of entrance
     if global.Tunnels == nil then
         global.Tunnels = {
-            --	tunnelObj.train = {}
-            --	tunnelObj.trainSpeed = 0
-            --  tunnelObj.path_is_drawing = false
-            --  tunnelObj.drew = {}
+            --  tunnel_obj.tunnel_index = tunnel_index
             --
-            --  tunnelObj.entrance = {
-            --      tunnelObj.entrance.mask = mask
-            --		tunnelObj.entrance.entity = tunnel
-            --		tunnelObj.entrance.components = components
-            --		tunnelObj.entrance.rails = rails
+            --	tunnel_obj.train = {}
+            --	tunnel_obj.train_speed = 0
+            --  tunnel_obj.path_is_drawing = false
+            --  tunnel_obj.drew = {}
+            --
+            --  tunnel_obj.entrance = {
+            --      tunnel_obj.entrance.mask = mask
+            --		tunnel_obj.entrance.entity = tunnel
+            --		tunnel_obj.entrance.components = components
+            --		tunnel_obj.entrance.rails = rails
             --   }
-            --	tunnelObj.exit = {}
+            --	tunnel_obj.exit = {}
             --
-            --	tunnelObj.paired = false
-            --  tunnelObj.distance = 0
+            --	tunnel_obj.paired = false
+            --  tunnel_obj.distance = 0
             --
-            --	tunnelObj.path_is_drawing = false
+            --	tunnel_obj.path_is_drawing = false
         }
     end
     -- dictionary to translate between mask id and tunnel id

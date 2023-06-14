@@ -1,19 +1,73 @@
-local util = require("util")
 local math2d = require('math2d')
 local constants = require('constants')
+require('util')
+require('tunnel')
 
+local detect_train, collision_check, get_area, get_uarea
+local create_temp_train, create_ghost_car, copy_train, load_train, load_carriage
+local search_tunnel
+local first_carriage_entered, arrived_tunnel_handler
 
-
-local function find_mask(tunnel)
-	for unit,prop in pairs(global.Tunnels) do
-		if prop.tunnel.unit_number == tunnel.unit_number then
-			return unit
-		end
+-- when train collides with entrance
+function train_entered(event)
+	if not (event.cause and event.entity) then
+		return
 	end
-	return nil
+
+	local is_valid_collision, uarea, tunnel_index = collision_check(event,1)
+
+	if (not is_valid_collision) then
+		return
+	end
+
+	local tunnel_obj = global.Tunnels[tunnel_index]
+
+	local carriage_processed
+	--loco entering tunnel
+	if (event.cause.type == "locomotive") then
+		carriage_processed = first_carriage_entered(event, uarea, tunnel_index)
+		--carriages entering tunnel
+	elseif (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon") then
+		local trains_in_tunnel = tunnel_obj.train
+		trains_in_tunnel.entered_carriages = trains_in_tunnel.entered_carriages + 1
+		carriage_processed = true
+	end
+
+	if not carriage_processed then
+		return
+	end
+
+	local nextCarriage, _ = event.cause.get_connected_rolling_stock(defines.rail_direction.back)
+	event.cause.disconnect_rolling_stock(defines.rail_direction.back)
+	event.cause.destroy()
+
+	if (nextCarriage ~= nil) then
+		nextCarriage.train.speed = tunnel_obj.train_speed
+	end
 end
 
-local function get_area(event, range)
+-- check if train has arrived
+-- TODO : make global table for running trains in tunnel to not to check every tunnels
+function train_process(event)
+	for unit, tunnel_obj in pairs(global.Tunnels) do
+		if next(tunnel_obj.train) ~= nil then
+			train = tunnel_obj.train
+			if train.arrived == false then
+				--search_tunnel(train)
+				if train.land_tick <= game.tick then
+					train.arrived = true
+					train.ghostCar.speed = 0
+				end
+			else
+				arrived_tunnel_handler(event, train, tunnel_obj)
+			end
+		end
+	end
+end
+
+
+-- return if collision angle was right, and area to place temp train / ghost car
+function get_area(event, range)
 	if event.entity.orientation == 0 and event.entity.position.y-event.cause.position.y>0 then return true, {x=0,y=range}
 	elseif event.entity.orientation == 0.25 and event.entity.position.x-event.cause.position.x<0 then return true, {x=-range,y=0}
 	elseif event.entity.orientation == 0.50 and event.entity.position.y-event.cause.position.y<0 then return true, {x=0,y=-range}
@@ -22,28 +76,27 @@ local function get_area(event, range)
 	return false, {x=0,y=0}
 end
 
-local function collision_check(event, range)
-	mask = find_mask(event.entity)
+function collision_check(event, range)
+	local tunnel_index = find_tunnel_index(event.entity)
+	local tunnel_obj = global.Tunnels[tunnel_index]
 	if (
-		event.cause
-		and event.entity.name == "TrainTunnelEntrance"
-		and global.Tunnels[mask].paired == true
-		and (
-			(next(global.Tunnels[mask].train) == nil and event.cause.type == "locomotive")
-			or (next(global.Tunnels[mask].train) ~= nil
+		(event.cause and event.entity.name == "TrainTunnelEntrance")
+		and (tunnel_obj and tunnel_obj.paired == true)
+		and ( -- tunnel is empty and locomotive is coming in, or carriage is added to tunnel already being used
+			(next(tunnel_obj.train) == nil and event.cause.type == "locomotive")
+			or (next(tunnel_obj.train) ~= nil
 				and (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon"))
 		)
-	) then 
-		entranceId = mask
-		exitId = global.Tunnels[mask].paired_to
-		valid, area = get_area(event, range)
-		return valid, area, entranceId, exitId --collision direction check + area
+	) then
+
+		local valid, area = get_area(event, range)
+		return valid, area, tunnel_index --collision direction check + area
 	else
 		return false
 	end
 end
 
-local function create_temp_train(event,position,type)
+function create_temp_train(event, position, type)
 	tempTrain = event.entity.surface.create_entity
 				({
 					name = "ghostLocomotive",
@@ -58,61 +111,52 @@ local function create_temp_train(event,position,type)
 	return tempTrain
 end
 
-local function copy_train(event,TrainInTunnel,tunnel_exit)
+function copy_train(event, train_in_tunnel, tunnel_index)
+	local train_obj = global.Tunnels[tunnel_index]
 	--save basic information
-	TrainInTunnel.name = event.cause.name
-	TrainInTunnel.orientation = tunnel_exit.tunnel.orientation-0.5
-	TrainInTunnel.speed = math.max(event.cause.speed, Constants.TRAIN_MIN_SPEED)
-	TrainInTunnel.backer_name = event.cause.backer_name
-	TrainInTunnel.color = event.cause.color
-	TrainInTunnel.manual_mode = event.cause.train.manual_mode
-	TrainInTunnel.schedule = event.cause.train.schedule
-	TrainInTunnel.currently_burning = event.cause.burner.currently_burning
-	TrainInTunnel.remaining_burning_fuel = event.cause.burner.remaining_burning_fuel
-	TrainInTunnel.fuel_inventory = event.cause.get_fuel_inventory().get_contents()
-	TrainInTunnel.len_carriages = #event.cause.train.carriages
-	--TrainInTunnel.real_carriages = event.cause.train.carriages
+	train_in_tunnel.name = event.cause.name
+	train_in_tunnel.orientation = train_obj.exit.entity.orientation-0.5
+	train_in_tunnel.speed = math.max(event.cause.speed, Constants.TRAIN_MIN_SPEED)
+	train_in_tunnel.backer_name = event.cause.backer_name
+	train_in_tunnel.color = event.cause.color
+	train_in_tunnel.manual_mode = event.cause.train.manual_mode
+	train_in_tunnel.schedule = event.cause.train.schedule
+	train_in_tunnel.currently_burning = event.cause.burner.currently_burning
+	train_in_tunnel.remaining_burning_fuel = event.cause.burner.remaining_burning_fuel
+	train_in_tunnel.fuel_inventory = event.cause.get_fuel_inventory().get_contents()
+	train_in_tunnel.len_carriages = #event.cause.train.carriages
 
 	--save carriage information
 	if #event.cause.train.carriages > 1 then
-		TrainInTunnel.carriages = {}
+		train_in_tunnel.carriages = {}
 		for i=2,#event.cause.train.carriages,1 do
-			TrainInTunnel.carriages[i]={}
+			train_in_tunnel.carriages[i]={}
 			if event.cause.train.carriages[i].type == "cargo-wagon" then
-				TrainInTunnel.carriages[i].type = "cargo-wagon"
-				TrainInTunnel.carriages[i].cargo = event.cause.train.carriages[i].get_inventory(defines.inventory.cargo_wagon).get_contents()
-				TrainInTunnel.carriages[i].bar = event.cause.train.carriages[i].get_inventory(defines.inventory.cargo_wagon).get_bar()
-				TrainInTunnel.carriages[i].filter = {}
+				train_in_tunnel.carriages[i].type = "cargo-wagon"
+				train_in_tunnel.carriages[i].cargo = event.cause.train.carriages[i].get_inventory(defines.inventory.cargo_wagon).get_contents()
+				train_in_tunnel.carriages[i].bar = event.cause.train.carriages[i].get_inventory(defines.inventory.cargo_wagon).get_bar()
+				train_in_tunnel.carriages[i].filter = {}
 				for j = 1, #event.cause.train.carriages[i].get_inventory(defines.inventory.cargo_wagon) do
-					TrainInTunnel.carriages[i].filter[j] = event.cause.train.carriages[i].get_inventory(defines.inventory.cargo_wagon).get_filter(j)
+					train_in_tunnel.carriages[i].filter[j] = event.cause.train.carriages[i].get_inventory(defines.inventory.cargo_wagon).get_filter(j)
 				end
 			elseif (event.cause.train.carriages[i].type == "fluid-wagon") then
-				TrainInTunnel.carriages[i].type = "fluid-wagon"
-				TrainInTunnel.carriages[i].fluids = event.cause.train.carriages[i].get_fluid_contents()
+				train_in_tunnel.carriages[i].type = "fluid-wagon"
+				train_in_tunnel.carriages[i].fluids = event.cause.train.carriages[i].get_fluid_contents()
 			end
 		end
 	end
 end
 
-local function get_orientation(tunnel_entrance, tunnel_exit)
-	x = tunnel_exit.tunnel.position.x - tunnel_entrance.tunnel.position.x
-	y = tunnel_exit.tunnel.position.y - tunnel_entrance.tunnel.position.y
-	res = (math.atan2(y, x)+(math.pi/2)) / (math.pi*2)
-	if res > 2*math.pi then
-		res = res - 2*math.pi
-	end
-	return res
-end
-
-local function get_uarea(tunnel)
-	if tunnel.tunnel.orientation == 0 then return  {x=0,y=1}
-	elseif tunnel.tunnel.orientation == 0.25 then return  {x=-1,y=0}
-	elseif tunnel.tunnel.orientation == 0.50 then return  {x=0,y=-1}
-	elseif tunnel.tunnel.orientation == 0.75 then return  {x=1,y=0}
+function get_uarea(tunnel_index)
+	local exit_entity = global.Tunnels[tunnel_index].exit.entity
+	if exit_entity.orientation == 0 then return  {x=0,y=1}
+	elseif exit_entity.orientation == 0.25 then return  {x=-1,y=0}
+	elseif exit_entity.orientation == 0.50 then return  {x=0,y=-1}
+	elseif exit_entity.orientation == 0.75 then return  {x=1,y=0}
 	end
 end
 
-local function create_ghost_car(event,position,orientation)
+function create_ghost_car(event,position,orientation)
 	ghostTrain = event.entity.surface.create_entity
 		({
 			name = "ghostCar",
@@ -129,117 +173,69 @@ local function create_ghost_car(event,position,orientation)
 end
 
 -- First train component enters tunnel
-local function train_entered(event, uarea, tunnel_entrance, tunnel_exit)
-	exit_uarea = get_uarea(tunnel_exit)
+function first_carriage_entered(event, uarea, tunnel_index)
+	local tunnel_obj = global.Tunnel[tunnel_index]
+	local exit_uarea = get_uarea(tunnel_index)
 
-	gc_area = math2d.position.multiply_scalar(uarea,constants.GC_RANGE)
-	temp1_area = math2d.position.multiply_scalar(uarea,constants.TEMP1_RANGE)
-	temp2_area = math2d.position.multiply_scalar(exit_uarea,constants.TEMP2_RANGE)
-	exit_area = math2d.position.multiply_scalar(exit_uarea,constants.EXIT_RANGE)
+	local gc_area = math2d.position.multiply_scalar(uarea,constants.GC_RANGE)
+	local temp1_area = math2d.position.multiply_scalar(uarea,constants.TEMP1_RANGE)
+	local temp2_area = math2d.position.multiply_scalar(exit_uarea,constants.TEMP2_RANGE)
+	local exit_area = math2d.position.multiply_scalar(exit_uarea,constants.EXIT_RANGE)
 
-	gc_position = math2d.position.add(event.entity.position,gc_area)
-	temp1_position = math2d.position.add(event.entity.position,temp1_area) --position for temp train1/ghost car objects
-	exit_position = math2d.position.add(tunnel_exit.tunnel.position,exit_area) -- train exit position
-	temp2_position = math2d.position.add(tunnel_exit.tunnel.position,temp2_area) -- position for temp train2 object
+	local gc_position = math2d.position.add(event.entity.position,gc_area)
+	local temp1_position = math2d.position.add(event.entity.position,temp1_area) --position for temp train1/ghost car objects
+	local exit_position = math2d.position.add(tunnel_obj.exit.entity.position,exit_area) -- train exit position
+	local temp2_position = math2d.position.add(tunnel_obj.exit.entity.position,temp2_area) -- position for temp train2 object
 
-	orientation = get_orientation(tunnel_entrance, tunnel_exit)
+	local orientation = get_orientation_entity(tunnel_obj.entrance.entity, tunnel_obj.exit.entity)
+	local ghostCar =  create_ghost_car(event,gc_position,orientation)
 
-	ghostCar =  create_ghost_car(event,gc_position,orientation)
-
-	local trainInTunnel = tunnel_entrance.train
 	--create ghost train to save the LTN schedule
-	tempTrain = create_temp_train(event,temp1_position,"entrance")
+	local trains_in_tunnel = tunnel_obj.train
+	local tempTrain = create_temp_train(event, temp1_position, "entrance")
 	remote.call("logistic-train-network", "reassign_delivery", event.cause.train.id, tempTrain.train)
-	trainInTunnel.TempTrain  = tempTrain
+	trains_in_tunnel.TempTrain  = tempTrain
 
-	tempTrain2 = create_temp_train(event,temp2_position,"exit")
-	trainInTunnel.TempTrain2 = tempTrain2
+	local tempTrain2 = create_temp_train(event, temp2_position, "exit")
+	trains_in_tunnel.TempTrain2 = tempTrain2
 
 	--ontick loop combine-----------------------------------
 	if ghostCar == nil or tempTrain == nil or tempTrain2 == nil then
-		tunnel_entrance.train = {}
+		tunnel_obj.train = {}
 		--game.print("temp creation failed")
-		return
+		return false
 	end
 
 	local speed = math.max(event.cause.speed, Constants.TRAIN_MIN_SPEED)
-	tunnel_entrance.trainSpeed = speed
+	tunnel_obj.train_speed = speed
 
-	trainInTunnel.ghostCar = ghostCar
-	trainInTunnel.destination = tunnel_exit
-	trainInTunnel.arrived = false
-	trainInTunnel.escape_done = false
-	trainInTunnel.head_escaped = false
-	trainInTunnel.exit_uarea = exit_uarea
-	trainInTunnel.exit_position = exit_position
-	trainInTunnel.entered_carriages = 1
-	trainInTunnel.land_tick = math.ceil(game.tick + math.abs(tunnel_entrance.distance/speed))
+	trains_in_tunnel.ghostCar = ghostCar
+	trains_in_tunnel.destination = tunnel_obj.exit.entity
+	trains_in_tunnel.arrived = false
+	trains_in_tunnel.escape_done = false
+	trains_in_tunnel.head_escaped = false
+	trains_in_tunnel.exit_uarea = exit_uarea
+	trains_in_tunnel.exit_position = exit_position
+	trains_in_tunnel.entered_carriages = 1
+	trains_in_tunnel.land_tick = math.ceil(game.tick + math.abs(tunnel_obj.distance/speed))
 
 	
 	
 	--copy train information
-	copy_train(event, trainInTunnel, tunnel_exit)
-	--if (trainInTunnel.len_carriages > 1) then
-	--	trainInTunnel.real_carriages[2].train.speed = speed
-	--	trainInTunnel.real_carriages[2].orientation = event.cause.orientation
-	--end
+	copy_train(event, trains_in_tunnel, tunnel_index)
 
 	--transfer passenger to ghost car
 	if (event.cause.get_driver()) then
-		trainInTunnel.passenger = event.cause.get_driver()
+		trains_in_tunnel.passenger = event.cause.get_driver()
 		ghostCar.set_passenger(event.cause.get_driver())
 	end
 
-end
-
-local function pairing_target(player)
-	for unit,prop in pairs(global.Tunnels) do
-		if prop.player == player.index then
-			return unit
-		end
-	end
-	return nil
-end
-
-local function train_entered_handler(event)
-	valid_collision, uarea, entranceId, exitId = collision_check(event,1)
-
-	if (not valid_collision) then
-		return
-	end
-
-	local tunnel_entrance = global.Tunnels[entranceId]
-	local tunnel_exit = global.Tunnels[exitId]
-
-
-	--loco entering tunnel
-	if (event.cause.type == "locomotive") then
-		train_entered(event, uarea, tunnel_entrance, tunnel_exit)
-	--carriages entering tunnel
-	elseif (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon") then
-		local trainInTunnel = tunnel_entrance.train
-		trainInTunnel.entered_carriages = trainInTunnel.entered_carriages + 1
-	end
-
-	local nextCarriage, _ = event.cause.get_connected_rolling_stock(defines.rail_direction.back)
-	event.cause.disconnect_rolling_stock(defines.rail_direction.back)
-
-	event.cause.destroy()
-	if (nextCarriage ~= nil) then
-		nextCarriage.train.speed = tunnel_entrance.trainSpeed
-	end
-
-
-end
-
-local function entity_damaged(event)
-	if event.cause and event.entity then
-		train_entered_handler(event)
-	end
+	return true
 end
 
 
-local function detect_train(train,type,direction)
+
+function detect_train(train,type,direction)
 	if type == "Train" then
 		left_top = constants.TRAIN_DETECTION_RANGE[direction][1]
 		right_down = constants.TRAIN_DETECTION_RANGE[direction][2]
@@ -262,60 +258,60 @@ local function detect_train(train,type,direction)
 	return false
 end
 
-local function load_train(train, tunnel)
+function load_train(train, train_speed)
 	train.TempTrain2.destroy()
-	NewTrain = train.ghostCar.surface.create_entity({
+	local new_train = train.ghostCar.surface.create_entity({
 		name = train.name,
 		position = train.exit_position,
 		orientation = train.orientation,
 		force = train.ghostCar.force,
 		raise_built = true
 	})
-	if NewTrain then
-		NewTrain.train.speed = tunnel.trainSpeed
-		NewTrain.backer_name = train.backer_name
-		NewTrain.color = train.color
-		NewTrain.train.manual_mode = train.manual_mode
-		NewTrain.train.schedule = train.schedule
-		NewTrain.burner.currently_burning = train.currently_burning
-		NewTrain.burner.remaining_burning_fuel = train.remaining_burning_fuel
+	if new_train then
+		new_train.train.speed = train_speed
+		new_train.backer_name = train.backer_name
+		new_train.color = train.color
+		new_train.train.manual_mode = train.manual_mode
+		new_train.train.schedule = train.schedule
+		new_train.burner.currently_burning = train.currently_burning
+		new_train.burner.remaining_burning_fuel = train.remaining_burning_fuel
 
-		for FuelName, quantity in pairs(train.fuel_inventory) do
-			NewTrain.get_fuel_inventory().insert({name = FuelName, count = quantity})
+		for fuel_name, quantity in pairs(train.fuel_inventory) do
+			new_train.get_fuel_inventory().insert({ name = fuel_name, count = quantity})
 		end
 
-		remote.call("logistic-train-network", "reassign_delivery", train.TempTrain.train.id, NewTrain.train)
+		remote.call("logistic-train-network", "reassign_delivery", train.TempTrain.train.id, new_train.train)
 	end
 
-	return NewTrain
+	return new_train
 end
 
-local function load_carriage(train)
+function load_carriage(train)
 	if train.newTrain.valid then
 		local manual_mode = train.manual_mode
-		NewCarriage = train.ghostCar.surface.create_entity({
+		local new_carriage = train.ghostCar.surface.create_entity({
 			name = train.carriages[train.num].type,
 			position = train.exit_position,
 			orientation = train.orientation,
 			force = train.newTrain.force,
 			raise_built = true
 		})
-		if NewCarriage then
+		if new_carriage then
 
-			NewCarriage.connect_rolling_stock(defines.rail_direction.front)
+			new_carriage.connect_rolling_stock(defines.rail_direction.front)
 			train.newTrain.train.manual_mode = manual_mode
 
-			if (NewCarriage.type == "cargo-wagon") then
-				NewCarriage.get_inventory(defines.inventory.cargo_wagon).set_bar(train.carriages[train.num].bar)
+			if (new_carriage.type == "cargo-wagon") then
+				new_carriage.get_inventory(defines.inventory.cargo_wagon).set_bar(train.carriages[train.num].bar)
 				for i, filter in pairs(train.carriages[train.num].filter) do
-					NewCarriage.get_inventory(defines.inventory.cargo_wagon).set_filter(i, filter)
+					new_carriage.get_inventory(defines.inventory.cargo_wagon).set_filter(i, filter)
 				end
 				for ItemName, quantity in pairs(train.carriages[train.num].cargo) do
-					NewCarriage.get_inventory(defines.inventory.cargo_wagon).insert({name = ItemName, count = quantity})
+					new_carriage.get_inventory(defines.inventory.cargo_wagon).insert({ name = ItemName, count = quantity})
 				end
-			elseif (NewCarriage.type == "fluid-wagon") then
+			elseif (new_carriage.type == "fluid-wagon") then
 				for FluidName, quantity in pairs(train.carriages[train.num].fluids) do
-					NewCarriage.insert_fluid({name = FluidName, amount = quantity})
+					new_carriage.insert_fluid({ name = FluidName, amount = quantity})
 				end
 			end
 
@@ -327,7 +323,7 @@ local function load_carriage(train)
 	return NewCarriage
 end
 
-local function search_tunnel(train)
+function search_tunnel(train)
 	target = train.ghostCar.surface.find_entity("TrainTunnelExit-mask", train.ghostCar.position)
 	if target and target.unit_number == train.destination.mask.unit_number then
 		train.arrived = true
@@ -335,21 +331,22 @@ local function search_tunnel(train)
 	end
 end
 
-local function arrived_tunnel_handler(event, train, tunnel, index)
-	Exit_Direction = global.Tunnels[tunnel.paired_to].tunnel.direction
+function arrived_tunnel_handler(event, train, tunnel_obj)
+	local tunnel_obj = global.Tunnels[tunnel_index]
+	local exit_direction = tunnel_obj.exit.entity.direction
 
 	if train.head_escaped == false then
-		if not detect_train(train,"Train", Exit_Direction) then
+		if not detect_train(train, "Train", exit_direction) then
 			--create new train
-			NewTrain = load_train(train, tunnel)
+			local new_train = load_train(train, tunnel_obj.train_speed)
 
-			if NewTrain then
+			if new_train then
 				--transfer passenger
 				if (train.passenger) then
 					if (train.passenger.is_player()) then
-						NewTrain.set_driver(train.passenger)
+						new_train.set_driver(train.passenger)
 					else
-						NewTrain.set_driver(train.passenger.player)
+						new_train.set_driver(train.passenger.player)
 					end
 				end
 
@@ -358,15 +355,15 @@ local function arrived_tunnel_handler(event, train, tunnel, index)
 				if train.entered_carriages == 1 then
 					train.escape_done = true
 				else
-					train.newTrain = NewTrain
+					train.newTrain = new_train
 					train.num = 2
 				end
 			end
 		end
 	elseif train.head_escaped == true then
-		if not detect_train(train,"Carriage",Exit_Direction) then
-			NewCarriage = load_carriage(train)
-			if NewCarriage then
+		if not detect_train(train,"Carriage", exit_direction) then
+			local new_carriage = load_carriage(train)
+			if new_carriage then
 				if train.entered_carriages == train.num then
 					train.escape_done = true
 				else
@@ -379,29 +376,8 @@ local function arrived_tunnel_handler(event, train, tunnel, index)
 	if train.escape_done == true and train.head_escaped == true then
 		train.ghostCar.destroy()
 		train.TempTrain.destroy()
-		tunnel.train = {}
+		tunnel_obj.train = {}
 	end
 end
 
-local function train_handler(event,train,tunnel,index)
-	if train.arrived == false then
-		--search_tunnel(train)
-		if train.land_tick <= game.tick then
-			train.arrived = true
-			train.ghostCar.speed = 0
-		end
-	else
-		arrived_tunnel_handler(event,train,tunnel,index)
-	end
-end
 
-local function train_process(event)
-	index = 1
-	for unit,tunnel in pairs(global.Tunnels) do
-		if next(tunnel.train) ~= nil then
-			train = tunnel.train
-			train_handler(event,train,tunnel,index)
-		end
-		index = index + 1
-	end
-end
