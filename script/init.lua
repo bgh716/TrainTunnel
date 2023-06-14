@@ -43,8 +43,9 @@ function on_init()
     -- key is player index
     if global.Pairing == nil then
         global.Pairing = {
-            -- pairingObj.timer = 0
-            -- pairingObj.tunnel_index = tunnel_index
+            -- pairing_obj.player_index = player_index
+            -- pairing_obj.timer = 0
+            -- pairing_obj.tunnel_index = tunnel_index
         }
     end
 end

@@ -2,7 +2,6 @@ require("script.init")
 require("script.tunnel")
 require("script.train")
 require("script.path")
-require("script.logic.on_tick")
 require("script.pairing")
 
 

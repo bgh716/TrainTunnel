@@ -1,21 +1,13 @@
-local math2d = require('math2d')
-
 local is_free_for_pair
 
-local function check_pairing_timeout(event)
+function check_pairing_timeout(event)
     local dst = player or game
-    for unit,prop in pairs(global.Tunnels) do
-        if prop.timer >= constants.PAIRING_TIMEOUT and prop.pairing == true then
-            player = game.players[global.Tunnels[unit].player]
-            if player.cursor_stack.valid_for_read and player.cursor_stack.name == "TrainTunnelExitItem" then
-                player.cursor_stack.clear()
-            end
-            global.Tunnels[unit].pairing = false
-            global.Tunnels[unit].player = nil
-            prop.timer = 0
+    for _, pairing_obj in pairs(global.Pairing) do
+        if pairing_obj.timer >= constants.PAIRING_TIMEOUT and pairing_obj.pairing == true then
+            end_pairing(pairing_obj.tunnel_index, pairing_obj.player_index, false)
             dst.print("pairing timed out")
         else
-            prop.timer = prop.timer + 1
+            tunnel_obj.timer = tunnel_obj.timer + 1
         end
     end
 end
@@ -44,9 +36,10 @@ end
 
 
 function start_pairing(tunnel_index, player_index)
-    local pairingObj = global.Pairing[player_index]
-    pairingObj.timer = 0
-    pairingObj.tunnel_index = tunnel_index
+    local pairing_obj = global.Pairing[player_index]
+    pairing_obj.player_index = player_index
+    pairing_obj.timer = 0
+    pairing_obj.tunnel_index = tunnel_index
 
     local player = game.get_player(player_index)
     player.clear_cursor()
@@ -76,8 +69,8 @@ function is_free_for_pair(tunnel_index, player_index)
         return false
     end
 
-    for unit, pairingObj in pairs(global.Pairing) do
-        if pairingObj.tunnel_index == tunnel_index or pairingObj.player_index == player_index then
+    for unit, pairing_obj in pairs(global.Pairing) do
+        if pairing_obj.tunnel_index == tunnel_index or pairing_obj.player_index == player_index then
             return false
         end
     end

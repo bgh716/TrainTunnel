@@ -19,7 +19,7 @@ local function create_ghost_car(Entrance,orientation)
     return ghost_train
 end
 
-local function start_drawing_path(event)
+function start_drawing_path(event)
     player = game.get_player(event.player_index)
     tunnel = player.surface.find_entity('TrainTunnelEntrance-mask', event.cursor_position) --need capsule to detect tunnel constantly, and the capsule id should be stored as key of global.Tunnels
 
@@ -53,7 +53,7 @@ local function create_path(drawing_car,tunnel)
     return path
 end
 
-local function draw_path(event)
+function draw_path(event)
     for unit,prop in pairs(global.Tunnels) do
         if prop.path_is_drawing == true then
             if game.tick < prop.drawing_tick then

@@ -325,9 +325,9 @@ function remove_tunnel(tunnel_index)
 		global.TunnelDic[exit_mask_id] = nil
 
 		-- remove pairing
-		for unit, pairingObj in pairs(global.Pairing) do
-			if pairingObj.tunnel_index == tunnel_index then
-				global.Pairing[pairingObj.player_index] = nil
+		for unit, pairing_obj in pairs(global.Pairing) do
+			if pairing_obj.tunnel_index == tunnel_index then
+				global.Pairing[pairing_obj.player_index] = nil
 			end
 		end
 	end
