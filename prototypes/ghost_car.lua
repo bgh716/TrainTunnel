@@ -62,4 +62,4 @@ local function makeGhost(name)
 	})
 end
 
-makeGhost("ghostCar")
+makeGhost("GhostCar")

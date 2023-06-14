@@ -4,7 +4,7 @@ local baseLoco = data.raw['locomotive']['locomotive']
 data:extend{
 	{
 		type = "locomotive",
-		name = "ghostLocomotive",
+		name = "GhostLocomotive",
 		icon = baseLoco.icon,
 		icon_size = 64, icon_mipmaps = 4,
 		flags = {"placeable-neutral", "placeable-off-grid", "not-on-map", "hidden", "not-selectable-in-game"},

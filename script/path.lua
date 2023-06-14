@@ -4,19 +4,19 @@ require('util')
 
 local function create_ghost_car(Entrance,orientation)
     tunnel = global.Tunnels[Entrance].tunnel
-    ghostTrain = tunnel.surface.create_entity
+    ghost_train = tunnel.surface.create_entity
     ({
-        name = "ghostCar",
+        name = "GhostCar",
         position = tunnel.position,
         force = tunnel.force,
     })
 
-    ghostTrain.orientation = orientation
-    ghostTrain.operable = false
-    ghostTrain.speed = Constants.TRAIN_MIN_SPEED
-    ghostTrain.destructible = false
+    ghost_train.orientation = orientation
+    ghost_train.operable = false
+    ghost_train.speed = Constants.TRAIN_MIN_SPEED
+    ghost_train.destructible = false
 
-    return ghostTrain
+    return ghost_train
 end
 
 local function start_drawing_path(event)
@@ -29,8 +29,8 @@ local function start_drawing_path(event)
             entranceId = tunnel.unit_number
             exitId = global.Tunnels[entranceId].paired_to
             orientation = get_orientation_entity(entrance.entity, exit.entity)
-            ghostCar = create_ghost_car(entranceId,orientation)
-            global.Tunnels[entranceId].drawing_car = ghostCar
+            ghost_car = create_ghost_car(entranceId,orientation)
+            global.Tunnels[entranceId].drawing_car = ghost_car
             global.Tunnels[entranceId].drawing_tick = math.ceil(game.tick + math.abs(global.Tunnels[entranceId].distance/constants.PATH_SPACING))
             global.Tunnels[entranceId].drew = {}
         else

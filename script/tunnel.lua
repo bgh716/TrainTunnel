@@ -305,7 +305,7 @@ function remove_tunnel(tunnel_index)
 		if tunnel_obj.train then
 			if tunnel_obj.train.TempTrain then tunnel_obj.train.TempTrain.destroy() end
 			if tunnel_obj.train.TempTrain2 then tunnel_obj.train.TempTrain2.destroy() end
-			if tunnel_obj.train.ghostCar then tunnel_obj.train.ghostCar.destroy() end
+			if tunnel_obj.train.ghost_car then tunnel_obj.train.ghost_car.destroy() end
 			tunnel_obj.train = {}
 		end
 
