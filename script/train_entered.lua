@@ -25,7 +25,6 @@ local function collision_check(event, range)
 	mask = find_mask(event.entity)
 	if (
 		event.cause
-		and event.cause.type == "locomotive"
 		and event.entity.name == "TrainTunnelT1"
 		and global.Tunnels[mask].paired == true
 		and (
@@ -146,7 +145,7 @@ local function train_entered(event, uarea, tunnel_entrance, tunnel_exit)
 
 	ghostCar =  create_ghost_car(event,gc_position,orientation)
 
-	trainInTunnel = tunnel_entrance.train
+	local trainInTunnel = tunnel_entrance.train
 	--create ghost train to save the LTN schedule
 	tempTrain = create_temp_train(event,temp1_position,"entrance")
 	remote.call("logistic-train-network", "reassign_delivery", event.cause.train.id, tempTrain.train)
@@ -157,7 +156,7 @@ local function train_entered(event, uarea, tunnel_entrance, tunnel_exit)
 
 	--ontick loop combine-----------------------------------
 	if ghostCar == nil or tempTrain == nil or tempTrain2 == nil then
-		trainInTunnel = {}
+		tunnel_entrance.train = {}
 		--game.print("temp creation failed")
 		return
 	end
@@ -208,8 +207,8 @@ local function train_entered_handler(event)
 		return
 	end
 
-	tunnel_entrance = global.Tunnels[entranceId]
-	tunnel_exit = global.Tunnels[exitId]
+	local tunnel_entrance = global.Tunnels[entranceId]
+	local tunnel_exit = global.Tunnels[exitId]
 
 
 	--loco entering tunnel
@@ -217,7 +216,7 @@ local function train_entered_handler(event)
 		train_entered(event, uarea, tunnel_entrance, tunnel_exit)
 	--carriages entering tunnel
 	elseif (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon") then
-		trainInTunnel = tunnel_entrance.train
+		local trainInTunnel = tunnel_entrance.train
 		trainInTunnel.entered_carriages = trainInTunnel.entered_carriages + 1
 	end
 
@@ -226,11 +225,10 @@ local function train_entered_handler(event)
 
 	event.cause.destroy()
 	if (nextCarriage ~= nil) then
-		nextCarriage.train.schedule = nil
 		nextCarriage.train.speed = tunnel_entrance.trainSpeed
 	end
 
-	
+
 end
 
 local function entity_damaged(event)
