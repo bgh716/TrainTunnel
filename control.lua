@@ -10,7 +10,7 @@ script.on_init(
 	on_init
 )
 
---on events
+--default events
 
 script.on_event(
 	{
@@ -39,9 +39,21 @@ script.on_event(
 	train_entered
 )
 
+-- custom events
+
 script.on_event(
 	"path_drawing_started"
 	, start_drawing_path
+)
+
+script.on_event(
+	"pairing_started"
+	, begin_pairing
+)
+
+script.on_event(
+	"pairing_canceled"
+	, cancel_pairing
 )
 
 
