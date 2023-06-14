@@ -1,6 +1,6 @@
 local pairing_made ={
     type = "custom-input",
-    name = "make_pairing",
+    name = "begin_pairing",
     key_sequence = "SHIFT + Z",
     consuming = "none"
 }

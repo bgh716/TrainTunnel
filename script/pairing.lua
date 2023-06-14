@@ -1,13 +1,6 @@
 local math2d = require('math2d')
 
-local function is_user_under_paring(index)
-    for unit,prop in pairs(global.Tunnels) do
-        if prop.player == index then
-            return true
-        end
-    end
-    return false
-end
+local is_free_for_pair
 
 local function check_pairing_timeout(event)
     local dst = player or game
@@ -27,16 +20,13 @@ local function check_pairing_timeout(event)
     end
 end
 
-local function make_pairing(event)
-    player = game.get_player(event.player_index)
-    tunnel = player.surface.find_entity('TrainTunnelEntrance-mask', event.cursor_position) --need capsule to detect tunnel constantly, and the capsule id should be stored as key of global.Tunnels
-
-    if tunnel then
-        if global.Tunnels[tunnel.unit_number].paired == false and global.Tunnels[tunnel.unit_number].pairing == false and not is_user_under_paring(player.index) then
-            global.Tunnels[tunnel.unit_number].pairing = true
-            global.Tunnels[tunnel.unit_number].timer = 0
-            global.Tunnels[tunnel.unit_number].player = player.index
-            player.cursor_stack.set_stack({name="TrainTunnelExitItem", count=1})
+function begin_pairing(event)
+    local player_index = event.player_index
+    local tunnel_mask = player.surface.find_entity('TrainTunnelEntrance-mask', event.cursor_position) --need capsule to detect tunnel constantly, and the capsule id should be stored as key of global.TunnelDic
+    if tunnel_mask then
+        local tunnel_idx = global.TunnelDic[tunnel_mask.unit_number]
+        if is_free_for_pair(tunnel_idx, player_index) then
+            start_pairing(tunnel_idx, player_idx)
         else
             --game.print("tunnel is on paired or under paring or user is already doing another paring")
         end
@@ -45,16 +35,52 @@ local function make_pairing(event)
     end
 end
 
-local function cancel_pairing(event)
-    player = game.get_player(event.player_index)
+function cancel_pairing(event)
+    local player_index = event.player_index
+    local tunnel_index = global.Pairing[player_index].tunnel_index
+    end_pairing(tunnel_index, player_index, false)
+end
+
+
+
+function start_pairing(tunnel_index, player_index)
+    local pairingObj = global.Pairing[player_index]
+    pairingObj.timer = 0
+    pairingObj.tunnel_index = tunnel_index
+
+    local player = game.get_player(player_index)
+    player.clear_cursor()
+    player.cursor_stack.set_stack({name="TrainTunnelExitItem"})
+end
+
+function end_pairing(tunnel_index, player_index, paired)
+    if paired then
+        local tunnelObj = global.Tunnels[tunnel_index]
+        tunnelObj.paired = true
+    end
+
+    local player = game.get_player(player_index)
     if player.cursor_stack.valid_for_read and player.cursor_stack.name == "TrainTunnelExitItem" then
         player.cursor_stack.clear()
-        for unit,prop in pairs(global.Tunnels) do
-            if prop.player == event.player_index then
-                prop.player = nil
-                prop.pairing = false
-                prop.timer = 0
-            end
+    end
+
+    global.Pairing[player_index] = nil
+end
+
+
+
+-- check if both user and tunnel are free for pairing
+function is_free_for_pair(tunnel_index, player_index)
+    local tunnel = global.Tunnels[tunnel_idx]
+    if tunnel.paired then
+        return false
+    end
+
+    for unit, pairingObj in pairs(global.Pairing) do
+        if pairingObj.tunnel_index == tunnel_index or pairingObj.player_index == player_index then
+            return false
         end
     end
+
+    return true
 end

@@ -33,8 +33,8 @@ local function start_drawing_path(event)
     tunnel = player.surface.find_entity('TrainTunnelEntrance-mask', event.cursor_position) --need capsule to detect tunnel constantly, and the capsule id should be stored as key of global.Tunnels
 
     if tunnel then
-        if global.Tunnels[tunnel.unit_number].paired == true and global.Tunnels[tunnel.unit_number].drawing == false then
-            global.Tunnels[tunnel.unit_number].drawing = true
+        if global.Tunnels[tunnel.unit_number].paired == true and global.Tunnels[tunnel.unit_number].path_is_drawing == false then
+            global.Tunnels[tunnel.unit_number].path_is_drawing = true
             entranceId = tunnel.unit_number
             exitId = global.Tunnels[entranceId].paired_to
             orientation = get_orientation(exitId, entranceId)
@@ -64,12 +64,12 @@ end
 
 local function draw_path(event)
     for unit,prop in pairs(global.Tunnels) do
-        if prop.drawing == true then
+        if prop.path_is_drawing == true then
             if game.tick < prop.drawing_tick then
                 local path = create_path(prop.drawing_car,prop)
                 table.insert(prop.drew,path)
             else
-                prop.drawing = false
+                prop.path_is_drawing = false
                 prop.drawing_car.destroy()
                 for i = 1, #prop.drew, 1 do
                     prop.drew[i].destroy()
