@@ -1,4 +1,4 @@
-local function on_int()
+local function on_init()
   --if global.something == nil then
   --  global.something = something
   
@@ -6,4 +6,3 @@ local function on_int()
 		global.Tunnels = {}
   end
 end
-return on_int

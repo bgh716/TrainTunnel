@@ -1,6 +1,17 @@
+require("script.init")
+require("script.tunnel")
+require("script.train")
+require("script.path")
+require("script.logic.on_tick")
+require("script.pairing")
+
+
+--initialize
 script.on_init(
-	require("script.init")
+	on_init
 )
+
+--on events
 
 script.on_event(
 	{
@@ -10,7 +21,7 @@ script.on_event(
 		defines.events.on_entity_cloned, -- | cloned by script ----
 		defines.events.script_raised_revive, -- | ghost revived by script
 	},
-	require("script.entity_built")
+	entity_built
 )
 
 script.on_event(
@@ -21,35 +32,36 @@ script.on_event(
 		defines.events.on_player_deconstructed_area,
 		defines.events.on_marked_for_deconstruction,
 	},
-	require("script.entity_destroyed")
+	entity_destroyed
 )
 
 script.on_event(
 	defines.events.on_entity_damaged,
-	require("script.train_entered")
+	train_entered
 )
+
+script.on_event(
+	"path_drawing_started"
+	, start_drawing_path
+)
+
+
+--tick events
 
 script.on_nth_tick(
 	5,
-	require("script.drawing_tick")
+	draw_path
 )
-
 script.on_nth_tick(
 	1,
-	require("script.on_tick")
+	flush_nil
+)
+script.on_nth_tick(
+	1,
+	train_process
+)
+script.on_nth_tick(
+	1,
+	check_pairing_timeout
 )
 
-script.on_event(
-	"pairing",
-	require("script.pairing")
-)
-
-script.on_event(
-	"cancel-pairing",
-	require("script.cancel_pairing")
-)
-
-script.on_event(
-	"path-drawing",
-	require("script.path_drawing")
-)

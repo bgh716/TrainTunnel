@@ -1,3 +1,4 @@
+--ghost train used to temporarily contain train inventories and block signal while train is in the tunnel
 local baseLoco = data.raw['locomotive']['locomotive']
 
 data:extend{
