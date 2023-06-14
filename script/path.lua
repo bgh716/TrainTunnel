@@ -1,46 +1,48 @@
-local math2d = require('math2d')
 local constants = require('constants')
 require('util')
 
-local function create_ghost_car(Entrance,orientation)
-    tunnel = global.Tunnels[Entrance].tunnel
-    ghost_train = tunnel.surface.create_entity
-    ({
-        name = "GhostCar",
-        position = tunnel.position,
-        force = tunnel.force,
-    })
-
-    ghost_train.orientation = orientation
-    ghost_train.operable = false
-    ghost_train.speed = Constants.TRAIN_MIN_SPEED
-    ghost_train.destructible = false
-
-    return ghost_train
-end
+local create_path, create_ghost_car
 
 function start_drawing_path(event)
-    player = game.get_player(event.player_index)
-    tunnel = player.surface.find_entity('TrainTunnelEntrance-mask', event.cursor_position) --need capsule to detect tunnel constantly, and the capsule id should be stored as key of global.Tunnels
+    local player = game.get_player(event.player_index)
+    local entrance_mask = player.surface.find_entity('TrainTunnelEntrance-mask', event.cursor_position) --need capsule to detect tunnel constantly, and the capsule id should be stored as key of global.Tunnels
+    local tunnel_index = global.TunnelDic[entrance_mask.unit_number]
+    local tunnel_obj = global.Tunnels[tunnel_index]
 
-    if tunnel then
-        if global.Tunnels[tunnel.unit_number].paired == true and global.Tunnels[tunnel.unit_number].path_is_drawing == false then
-            global.Tunnels[tunnel.unit_number].path_is_drawing = true
-            entranceId = tunnel.unit_number
-            exitId = global.Tunnels[entranceId].paired_to
-            orientation = get_orientation_entity(entrance.entity, exit.entity)
-            ghost_car = create_ghost_car(entranceId,orientation)
-            global.Tunnels[entranceId].drawing_car = ghost_car
-            global.Tunnels[entranceId].drawing_tick = math.ceil(game.tick + math.abs(global.Tunnels[entranceId].distance/constants.PATH_SPACING))
-            global.Tunnels[entranceId].drew = {}
+    if entrance_mask then
+        if tunnel_obj.paired == true and tunnel_obj.path_is_drawing == false then
+            tunnel_obj.path_is_drawing = true
+            local orientation = get_orientation_entity(tunnel_obj.entrance.entity, tunnel_obj.exit.entity)
+            tunnel_obj.drawing_car = create_ghost_car(tunnel_obj.entrance.entity, orientation)
+            tunnel_obj.drawing_tick = math.ceil(game.tick + math.abs(tunnel_obj.distance/constants.PATH_SPACING))
+            tunnel_obj.drew = {}
         else
             --game.print("this tunnel not paired or drawing path already")
         end
     end
 end
 
-local function create_path(drawing_car,tunnel)
-    local path = tunnel.tunnel.surface.create_entity
+
+
+function draw_path(event)
+    for _, tunnel_obj in pairs(global.Tunnels) do
+        if tunnel_obj.path_is_drawing == true then
+            if game.tick < tunnel_obj.drawing_tick then
+                local path = create_path(tunnel_obj.drawing_car, tunnel_obj)
+                table.insert(tunnel_obj.drew,path)
+            else
+                tunnel_obj.path_is_drawing = false
+                tunnel_obj.drawing_car.destroy()
+                for i = 1, #tunnel_obj.drew, 1 do
+                    tunnel_obj.drew[i].destroy()
+                end
+            end
+        end
+    end
+end
+
+function create_path(drawing_car, tunnel_obj)
+    local path = tunnel_obj.entrance.entity.surface.create_entity
     ({
         name = "path",
         position = drawing_car.position,
@@ -53,19 +55,18 @@ local function create_path(drawing_car,tunnel)
     return path
 end
 
-function draw_path(event)
-    for unit,prop in pairs(global.Tunnels) do
-        if prop.path_is_drawing == true then
-            if game.tick < prop.drawing_tick then
-                local path = create_path(prop.drawing_car,prop)
-                table.insert(prop.drew,path)
-            else
-                prop.path_is_drawing = false
-                prop.drawing_car.destroy()
-                for i = 1, #prop.drew, 1 do
-                    prop.drew[i].destroy()
-                end
-            end
-        end
-    end
+function create_ghost_car(entrance_entity, orientation)
+    local ghost_train = entrance_entity.surface.create_entity
+    ({
+        name = "GhostCar",
+        position = entrance_entity.position,
+        force = entrance_entity.force
+    })
+
+    ghost_train.orientation = orientation
+    ghost_train.operable = false
+    ghost_train.speed = Constants.TRAIN_MIN_SPEED
+    ghost_train.destructible = false
+
+    return ghost_train
 end
