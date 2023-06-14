@@ -223,11 +223,14 @@ local function train_entered_handler(event)
 
 	local nextCarriage, _ = event.cause.get_connected_rolling_stock(defines.rail_direction.back)
 	event.cause.disconnect_rolling_stock(defines.rail_direction.back)
+
 	event.cause.destroy()
 	if (nextCarriage ~= nil) then
 		nextCarriage.train.schedule = nil
 		nextCarriage.train.speed = tunnel_entrance.trainSpeed
 	end
+
+	
 end
 
 local function entity_damaged(event)
