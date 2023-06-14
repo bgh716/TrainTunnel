@@ -22,7 +22,7 @@ local function create_ghost_car(Entrance,orientation)
 
 	SpookyGhost.orientation = orientation
 	SpookyGhost.operable = false
-	SpookyGhost.speed = math.max(tunnel.trainSpeed, Constants.TRAIN_MIN_SPEED)
+	SpookyGhost.speed = Constants.TRAIN_MIN_SPEED
 	SpookyGhost.destructible = false
 
 	return SpookyGhost
