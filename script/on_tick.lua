@@ -34,11 +34,7 @@ local function load_train(train, tunnel)
 			raise_built = true
 			})
 	if NewTrain then
-		if (tunnel.trainSpeed) then
-			NewTrain.train.speed = tunnel.trainSpeed
-		else
-			NewTrain.train.speed = 0.5
-		end
+		NewTrain.train.speed = tunnel.trainSpeed
 		NewTrain.backer_name = train.backer_name
 		NewTrain.color = train.color
 		NewTrain.train.manual_mode = train.manual_mode		
