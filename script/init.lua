@@ -1,4 +1,4 @@
-local function on_init()
+function on_init()
   --if global.something == nil then
   --  global.something = something
   

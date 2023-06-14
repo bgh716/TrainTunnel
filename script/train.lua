@@ -26,7 +26,7 @@ local function collision_check(event, range)
 	mask = find_mask(event.entity)
 	if (
 		event.cause
-		and event.entity.name == "TrainTunnelT1"
+		and event.entity.name == "TrainTunnelEntrance"
 		and global.Tunnels[mask].paired == true
 		and (
 			(next(global.Tunnels[mask].train) == nil and event.cause.type == "locomotive")
@@ -46,7 +46,7 @@ end
 local function create_temp_train(event,position,type)
 	tempTrain = event.entity.surface.create_entity
 				({
-					name = "ghostLocomotiveTT",
+					name = "ghostLocomotive",
 					position = position,
 					force = event.cause.force,
 					raise_built = false,
@@ -113,19 +113,19 @@ local function get_uarea(tunnel)
 end
 
 local function create_ghost_car(event,position,orientation)
-	SpookyGhost = event.entity.surface.create_entity
+	ghostTrain = event.entity.surface.create_entity
 		({
 			name = "ghostCar",
 			position = position,
 			force = event.cause.force,
 		})
 
-	SpookyGhost.orientation = orientation
-	SpookyGhost.operable = false
-	SpookyGhost.speed = math.max(event.cause.speed, Constants.TRAIN_MIN_SPEED)
-	SpookyGhost.destructible = false
+	ghostTrain.orientation = orientation
+	ghostTrain.operable = false
+	ghostTrain.speed = math.max(event.cause.speed, Constants.TRAIN_MIN_SPEED)
+	ghostTrain.destructible = false
 
-	return SpookyGhost
+	return ghostTrain
 end
 
 -- First train component enters tunnel
@@ -328,7 +328,7 @@ local function load_carriage(train)
 end
 
 local function search_tunnel(train)
-	target = train.ghostCar.surface.find_entity("TrainTunnelT2-mask", train.ghostCar.position)
+	target = train.ghostCar.surface.find_entity("TrainTunnelExit-mask", train.ghostCar.position)
 	if target and target.unit_number == train.destination.mask.unit_number then
 		train.arrived = true
 		train.ghostCar.speed = 0

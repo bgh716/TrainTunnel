@@ -13,24 +13,24 @@ end
 
 local function create_ghost_car(Entrance,orientation)
     tunnel = global.Tunnels[Entrance].tunnel
-    SpookyGhost = tunnel.surface.create_entity
+    ghostTrain = tunnel.surface.create_entity
     ({
         name = "ghostCar",
         position = tunnel.position,
         force = tunnel.force,
     })
 
-    SpookyGhost.orientation = orientation
-    SpookyGhost.operable = false
-    SpookyGhost.speed = Constants.TRAIN_MIN_SPEED
-    SpookyGhost.destructible = false
+    ghostTrain.orientation = orientation
+    ghostTrain.operable = false
+    ghostTrain.speed = Constants.TRAIN_MIN_SPEED
+    ghostTrain.destructible = false
 
-    return SpookyGhost
+    return ghostTrain
 end
 
 local function start_drawing_path(event)
     player = game.get_player(event.player_index)
-    tunnel = player.surface.find_entity('TrainTunnelT1-mask', event.cursor_position) --need capsule to detect tunnel constantly, and the capsule id should be stored as key of global.Tunnels
+    tunnel = player.surface.find_entity('TrainTunnelEntrance-mask', event.cursor_position) --need capsule to detect tunnel constantly, and the capsule id should be stored as key of global.Tunnels
 
     if tunnel then
         if global.Tunnels[tunnel.unit_number].paired == true and global.Tunnels[tunnel.unit_number].drawing == false then

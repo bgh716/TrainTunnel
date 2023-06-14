@@ -14,7 +14,7 @@ local function check_pairing_timeout(event)
     for unit,prop in pairs(global.Tunnels) do
         if prop.timer >= constants.PAIRING_TIMEOUT and prop.pairing == true then
             player = game.players[global.Tunnels[unit].player]
-            if player.cursor_stack.valid_for_read and player.cursor_stack.name == "TrainTunnelT2Item" then
+            if player.cursor_stack.valid_for_read and player.cursor_stack.name == "TrainTunnelExitItem" then
                 player.cursor_stack.clear()
             end
             global.Tunnels[unit].pairing = false
@@ -29,14 +29,14 @@ end
 
 local function make_pairing(event)
     player = game.get_player(event.player_index)
-    tunnel = player.surface.find_entity('TrainTunnelT1-mask', event.cursor_position) --need capsule to detect tunnel constantly, and the capsule id should be stored as key of global.Tunnels
+    tunnel = player.surface.find_entity('TrainTunnelEntrance-mask', event.cursor_position) --need capsule to detect tunnel constantly, and the capsule id should be stored as key of global.Tunnels
 
     if tunnel then
         if global.Tunnels[tunnel.unit_number].paired == false and global.Tunnels[tunnel.unit_number].pairing == false and not is_user_under_paring(player.index) then
             global.Tunnels[tunnel.unit_number].pairing = true
             global.Tunnels[tunnel.unit_number].timer = 0
             global.Tunnels[tunnel.unit_number].player = player.index
-            player.cursor_stack.set_stack({name="TrainTunnelT2Item", count=1})
+            player.cursor_stack.set_stack({name="TrainTunnelExitItem", count=1})
         else
             --game.print("tunnel is on paired or under paring or user is already doing another paring")
         end
@@ -47,7 +47,7 @@ end
 
 local function cancel_pairing(event)
     player = game.get_player(event.player_index)
-    if player.cursor_stack.valid_for_read and player.cursor_stack.name == "TrainTunnelT2Item" then
+    if player.cursor_stack.valid_for_read and player.cursor_stack.name == "TrainTunnelExitItem" then
         player.cursor_stack.clear()
         for unit,prop in pairs(global.Tunnels) do
             if prop.player == event.player_index then
