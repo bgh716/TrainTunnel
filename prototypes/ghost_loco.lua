@@ -1,9 +1,10 @@
+--ghost train used to temporarily contain train inventories and block signal while train is in the tunnel
 local baseLoco = data.raw['locomotive']['locomotive']
 
 data:extend{
 	{
 		type = "locomotive",
-		name = "ghostLocomotiveTT",
+		name = "GhostLocomotive",
 		icon = baseLoco.icon,
 		icon_size = 64, icon_mipmaps = 4,
 		flags = {"placeable-neutral", "placeable-off-grid", "not-on-map", "hidden", "not-selectable-in-game"},

@@ -1,3 +1,4 @@
+--ghost entity used to simulate train under the tunnel
 local function makeGhost(name)
 	local T = table.deepcopy(data.raw.car["car"])
 	T.name = name
@@ -61,4 +62,4 @@ local function makeGhost(name)
 	})
 end
 
-makeGhost("ghostCar")
+makeGhost("GhostCar")

@@ -15,7 +15,7 @@ local function makeTunnelItem(name, icon, placerEntity)
 end
 
 local function makeTunnelPlacerEntity(name, icon, pictureFileName, placerItem)
-	if name == "TrainTunnelT2-placer" then
+	if name == "TrainTunnelExit-placer" then
 		minable = {mining_time = 0.5}
 	else
 		minable = {mining_time = 0.5, result = placerItem}
@@ -156,7 +156,7 @@ local function makeMaskEntity(name, icon, pictureFileName, placerItem)
 			}
 		}
 
-	if name == "TrainTunnelT2-mask" then
+	if name == "TrainTunnelExit-mask" then
 		minable = {mining_time = 0.5}
 		placeable_by = { item = placerItem, count = 0 }
 	else
@@ -354,8 +354,8 @@ end
 
 
 
-data:extend(makeTunnelPrototypes("TrainTunnelT1")) --Entrance
-data:extend(makeTunnelPrototypes("TrainTunnelT2")) --Exit
+data:extend(makeTunnelPrototypes("TrainTunnelEntrance")) --Entrance
+data:extend(makeTunnelPrototypes("TrainTunnelExit")) --Exit
 
 
 
@@ -364,7 +364,7 @@ data:extend({
 
 	{ --------- Tunnel recipie ----------
 		type = "recipe",
-		name = "TrainTunnelT1Recipe",
+		name = "TrainTunnelEntranceRecipe",
 		enabled = false,
 		energy_required = 5,
 		ingredients =
@@ -373,18 +373,18 @@ data:extend({
 				{"rail", 40},
 				{"rail-signal", 5}
 			},
-		result = "TrainTunnelT1Item"
+		result = "TrainTunnelEntranceItem"
 	}
 })
 -- Add recipes for Tunnel
 data:extend({
 	{ --------- Tunnel recipie ----------
 		type = "recipe",
-		name = "TrainTunnelT2Recipe",
+		name = "TrainTunnelExitRecipe",
 		enabled = false,
 		energy_required = 5,
 		ingredients =
-			{ {"TrainTunnelT1Item", 1} },
-		result = "TrainTunnelT2Item"
+			{ {"TrainTunnelEntranceItem", 1} },
+		result = "TrainTunnelExitItem"
 	}
 })
