@@ -127,7 +127,7 @@ local function makeBlockEntity(name, icon, pictureFileName, placerItem)
 		
 		max_health = HP,
 		render_layer = "higher-object-under",
-		selection_box = {{-2, -0.01}, {2, 0.01}},
+		selection_box = {{-1, -0.01}, {1, 0.01}},
 		selection_priority = 100,
 		collision_box = {{-1, -0.01}, {1, 0.01}},
 		collision_mask = {"train-layer"},
@@ -241,7 +241,7 @@ local function makeGarageEntity(name, icon, pictureFileName, placerItem)
 		selection_box = {{-0.01, -0.01}, {0.01, 0.01}},
 		selection_priority = 100,
 		collision_box = {{-2, -3.5}, {2, 7}},
-		collision_mask = {"player-layer"},
+		collision_mask = {"player-layer","train-layer"},
 		render_layer = "lower-object-above-shadow",
 		pictures = {
 			direction_count = 1,
@@ -319,7 +319,7 @@ local function makeTunnelPrototypes(baseName)
 		),
 
 		-- Make the block reverse way
-		makeTunnelEntity(
+		makeBlockEntity(
 			baseName .. '-block',
 			iconFilename,
 			"__core__/graphics/empty.png",
