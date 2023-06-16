@@ -10,7 +10,8 @@ local function makeTunnelItem(name, icon, placerEntity)
 		order = "g",
 		place_result = placerEntity,
 		stack_size = 10,
-		group = "logistics"
+		group = "logistics",
+		subgroup = "train-transport"
 	}
 end
 
