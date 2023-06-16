@@ -6,7 +6,10 @@ local create_path, create_ghost_car
 function start_drawing_path(event)
     local player = game.get_player(event.player_index)
     local entrance_mask = player.surface.find_entity('TrainTunnelEntrance-mask', event.cursor_position) --need capsule to detect tunnel constantly, and the capsule id should be stored as key of global.Tunnels
-    local tunnel_index = global.TunnelDic[entrance_mask.unit_number]
+    if entrance_mask == nil then
+        return
+    end
+    local tunnel_index = global.TunnelDic[entrance_mask.unit_number][1]
     local tunnel_obj = global.Tunnels[tunnel_index]
 
     if entrance_mask then

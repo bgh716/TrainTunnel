@@ -7,7 +7,6 @@ function on_init()
     if global.Tunnels == nil then
         global.Tunnels = {
             --  tunnel_obj.tunnel_index = tunnel_index
-            --
             --	tunnel_obj.train = {}
             --	tunnel_obj.train_speed = 0
             --  tunnel_obj.path_is_drawing = false
@@ -18,11 +17,12 @@ function on_init()
             --		tunnel_obj.entrance.entity = tunnel
             --		tunnel_obj.entrance.components = components
             --		tunnel_obj.entrance.rails = rails
+            --      tunnel_obj.entrance.is_pairing = false/player_index
             --   }
             --	tunnel_obj.exit = {}
             --
             --	tunnel_obj.paired = false
-            --  tunnel_obj.distance = 0
+            --  tunnel_obj.distance = 0dd
             --
             --	tunnel_obj.path_is_drawing = false
         }
@@ -32,7 +32,7 @@ function on_init()
     --   it is still better to include add translation between entrance mask id
     --   for possible change in tunnel id generating logic
     -- key is unit number of mask of tunnel
-    -- value is tuple of tunnel_index and type, type is either "Entrance" or "Exit"
+    -- value is tuple of tunnel_index and type, types are "Entrance","Exit","Entity"
     if global.TunnelDic == nil then
         global.TunnelDic = {
             --(tunnel_index, "Entrance")
@@ -45,7 +45,7 @@ function on_init()
         global.Pairing = {
             -- pairing_obj.player_index = player_index
             -- pairing_obj.timer = 0
-            -- pairing_obj.tunnel_index = tunnel_index
+            -- pairing_obj.entrance_mask_index = entrance_mask_index
         }
     end
 end

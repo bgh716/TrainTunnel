@@ -34,20 +34,18 @@ function entity_destroyed(event)
 	end
 
 	local unit_number = event.unit_number or event.entity.unit_number
+	local mask_index, mask_type
 
-	local tunnel_index = global.TunnelDic[unit_number]
-	if tunnel_index then
-		remove_tunnel(tunnel_index)
+	if global.TunnelDic[unit_number] then
+		mask_index = global.TunnelDic[unit_number][1]
+		mask_type = global.TunnelDic[unit_number][2]
+	else
+		return
 	end
-end
 
-function find_tunnel_index(tunnel_entity)
-	for _, tunnel_obj in pairs(global.Tunnels) do
-		if tunnel_obj.entrance.entity.unit_number == tunnel_entity.unit_number or tunnel_obj.exit.entity.unit_number == tunnel_entity.unit_number then
-			return tunnel_obj.tunnel_index
-		end
+	if mask_index then
+		remove_tunnel(mask_index,mask_type, event.player_index)
 	end
-	return nil
 end
 
 function flush_nil(event)
@@ -59,9 +57,6 @@ function flush_nil(event)
 		index = index + 1
 	end
 end
-
-
-
 
 -- local functions
 
@@ -200,14 +195,16 @@ function build_tunnel(entity, player)
 		return true
 	end
 
-	local name, placer_type, entrance_index
+	local name, placer_type, entrance_mask_index
 	if entity.name == "TrainTunnelEntrance-placer" then
 		name = "TrainTunnelEntrance-placer"
-		entrance_index = "dummy"
+		entrance_mask_index = "dummy"
 		placer_type = "Entrance"
 	elseif entity.name == "TrainTunnelExit-placer" then
 		name = "TrainTunnelExit-placer"
-		entrance_index = global.Pairing[player.index].tunnel_index
+		if global.Pairing[player.index] then
+			entrance_mask_index = global.Pairing[player.index].entrance_mask_index
+		end
 		placer_type = "Exit"
 	end
 
@@ -215,8 +212,8 @@ function build_tunnel(entity, player)
 	local mask_is_valid, mask = build_mask(entity,player,name)
 	local components_is_valid, tunnel, components = build_components(entity,player,name,placer_type)
 
-	if mask_is_valid and components_is_valid and entrance_index then
-		create_tunnel(mask, tunnel, rails, components, player.index, placer_type, entrance_index)
+	if mask_is_valid and components_is_valid and entrance_mask_index then
+		create_tunnel(mask, tunnel, rails, components, player.index, placer_type, entrance_mask_index)
 	else
 		-- build failed, clear up entities
 		local dst = player or game
@@ -224,6 +221,7 @@ function build_tunnel(entity, player)
 		for i=1,#components,1 do
 			destroy(components[i])
 		end
+		destroy(tunnel)
 		destroy(mask)
 		for i=1,#rails,1 do
 			destroy(rails[i])
@@ -235,36 +233,37 @@ function build_tunnel(entity, player)
 end
 
 -- logically create tunnel object and add it to global tunnel variable
-function create_tunnel(mask, tunnel, rails, components, player_index, placer_type, entrance_index)
-	if placer_type == "TrainTunnelEntrance-placer" then
+function create_tunnel(mask, tunnel, rails, components, player_index, placer_type, entrance_mask_index)
+	if placer_type == "Entrance" then
 		-- create tunnel object and register to dictionary
-		local tunnel_index, tunnel_obj = create_new_tunnel_obj(mask.unit_number)
-		global.TunnelDic[mask.unit_number] = { tunnel_index, "Entrance" }
+		local tunnel_obj = create_new_tunnel_obj(mask.unit_number)
+		global.TunnelDic[tunnel.unit_number] = { mask.unit_number, "Entity" }
+		global.TunnelDic[mask.unit_number] = { mask.unit_number, placer_type }
+		global.Pairing[player_index] = {}
 
 		-- register components to tunnel object
 		tunnel_obj.entrance.mask = mask
 		tunnel_obj.entrance.entity = tunnel
 		tunnel_obj.entrance.components = components
 		tunnel_obj.entrance.rails = rails
+		tunnel_obj.entrance.is_pairing = player_index
 
 		-- start pairing tunnel
-		start_pairing(tunnel_index, player_index)
+		start_pairing(mask.unit_number, player_index)
 
-	elseif placer_type == "TrainTunnelExit-placer" then
-		local tunnel_index, _ = global.TunnelDic[entrance_index]
-		local tunnel_obj = global.Tunnels[tunnel_index]
-		global.TunnelDic[mask.unit_number] = { tunnel_index, "Exit" }
-
+	elseif placer_type == "Exit" then
+		local tunnel_obj = global.Tunnels[entrance_mask_index]
+		global.TunnelDic[mask.unit_number] = { entrance_mask_index, placer_type }
 		-- register components to tunnel object
 		tunnel_obj.exit.mask = mask
 		tunnel_obj.exit.entity = tunnel
 		tunnel_obj.exit.components = components
 		tunnel_obj.exit.rails = rails
 
-		tunnel_obj.distance = math2d.position.distance(tunnel_obj.entrance.position, tunnel_obj.exit.position)
+		tunnel_obj.distance = math2d.position.distance(tunnel_obj.entrance.entity.position, tunnel_obj.exit.entity.position)
 
 		-- finish pairing tunnel
-		end_pairing(tunnel_index, player_index, true)
+		end_pairing(entrance_mask_index, player_index, true)
 
 	end
 end
@@ -285,15 +284,19 @@ function create_new_tunnel_obj(tunnel_index)
 	tunnel_obj.path_is_drawing = false
 
 	global.Tunnels[tunnel_index] = tunnel_obj
+
+	return global.Tunnels[tunnel_index]
 end
 
 -- remove tunnel physically, logically, and from dictionary
-function remove_tunnel(tunnel_index)
-	local tunnel_obj = global.Tunnels[tunnel_index]
+function remove_tunnel(mask_index,mask_type,player_index)
+	tunnel_obj = global.Tunnels[mask_index]
+	
 	if not tunnel_obj then
 		return
 	end
-
+	
+	--remove exit and inside objects
 	if tunnel_obj.paired then
 		if tunnel_obj.drawing_car then
 			tunnel_obj.drawing_car.destroy()
@@ -321,32 +324,43 @@ function remove_tunnel(tunnel_index)
 			tunnel_obj.exit.rails[i].destroy()
 		end
 
-		tunnel_obj.exit = nil
-		global.TunnelDic[exit_mask_id] = nil
+		global.TunnelDic[tunnel_obj.exit.mask.unit_number] = nil
 
+		tunnel_obj.exit.mask.destroy()
+		tunnel_obj.paired = false
+		tunnel_obj.exit = {}
+	end
+	
+	--remove entrance
+	if mask_type == "Entrance" then
+		
 		-- remove pairing
-		for unit, pairing_obj in pairs(global.Pairing) do
-			if pairing_obj.tunnel_index == tunnel_index then
-				global.Pairing[pairing_obj.player_index] = nil
+		if tunnel_obj.entrance.is_pairing then
+			local player = game.get_player(tunnel_obj.entrance.is_pairing)
+			if player.cursor_stack.valid_for_read 
+			and player.cursor_stack.name == "TrainTunnelExitItem" then
+				player.cursor_stack.clear()
 			end
+			global.Pairing[tunnel_obj.entrance.is_pairing] = nil
 		end
+
+		local entrance_mask_id = tunnel_obj.entrance.mask.unit_number
+		local entrance_components = tunnel_obj.entrance.components
+		for i=1,#entrance_components,1 do
+			entrance_components[i].destroy()
+		end
+
+		tunnel_obj.entrance.entity.destroy()
+
+		for i=1,#tunnel_obj.entrance.rails,1 do
+			tunnel_obj.entrance.rails[i].destroy()
+		end
+
+		global.TunnelDic[tunnel_obj.entrance.mask.unit_number] = nil
+		tunnel_obj.entrance = nil
+		tunnel_obj.exit = nil
+		tunnel_obj.train = nil
+		tunnel_obj.drew = nil
+		tunnel_obj = nil
 	end
-
-	local entrance_mask_id = tunnel_obj.entrance.mask.unit_number
-	local entrance_components = tunnel_obj.entrance.components
-	for i=1,#entrance_components,1 do
-		entrance_components[i].destroy()
-	end
-
-	tunnel_obj.entrance.entity.destroy()
-
-	for i=1,#tunnel_obj.entrance.rails,1 do
-		tunnel_obj.entrance.rails[i].destroy()
-	end
-
-	tunnel_obj.entrance = nil
-	tunnel_obj.tunnel_index = nil
-
-	global.TunnelDic[entrance_mask_id] = nil
-	global.Tunnels[tunnel_index] = nil
 end
