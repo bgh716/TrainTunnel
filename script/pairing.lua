@@ -3,9 +3,8 @@ local is_free_for_pair
 
 function check_pairing_timeout(event)
     for player_index, pairing_obj in pairs(global.Pairing) do
-        if pairing_obj.timer >= constants.PAIRING_TIMEOUT 
-        and global.Tunnels[pairing_obj.tunnel_index].entrance.is_pairing == player_index then
-            end_pairing(pairing_obj.tunnel_index, pairing_obj.player_index, false)
+        if pairing_obj.timer >= constants.PAIRING_TIMEOUT then
+            end_pairing(pairing_obj.tunnel_index, player_index, false)
             game.get_player(player_index).print("pairing timed out")
         else
             pairing_obj.timer = pairing_obj.timer + 1
@@ -20,14 +19,13 @@ function begin_pairing(event)
     if tunnel_mask then
         local tunnel_index = global.TunnelDic[tunnel_mask.unit_number]
         if is_free_for_pair(tunnel_index, player_index) then
-            global.Pairing[player_index] = {}
-            global.Tunnels[tunnel_index].entrance.is_pairing = player_index
+            global.Tunnels[tunnel_index].pairing_player = player_index
             start_pairing(tunnel_index, player_index)
         else
             player.print("tunnel is on paired or under pairing or user is already doing another pairing")
         end
     else
-        --game.print("tunnel not found")
+        game.print("tunnel not found")
     end
 end
 
@@ -43,10 +41,12 @@ end
 
 
 function start_pairing(tunnel_index, player_index)
-    local pairing_obj = global.Pairing[player_index]
-    pairing_obj.player_index = player_index
-    pairing_obj.timer = 0
-    pairing_obj.tunnel_index = tunnel_index
+    local pairing_obj = {
+        player_index = player_index,
+        timer = 0,
+        tunnel_index = tunnel_index
+    }
+    global.Pairing[player_index] = pairing_obj
 
     local player = game.get_player(player_index)
     player.clear_cursor()
@@ -65,7 +65,7 @@ function end_pairing(tunnel_index, player_index, paired)
         player.cursor_stack.clear()
     end
 
-    tunnel_obj.entrance.is_pairing = false
+    tunnel_obj.pairing_player = nil
     global.Pairing[player_index] = nil
 end
 
@@ -74,7 +74,7 @@ end
 -- check if both user and tunnel are free for pairing
 function is_free_for_pair(tunnel_index, player_index)
     local tunnel = global.Tunnels[tunnel_index]
-    if tunnel.paired or tunnel.entrance.is_pairing or global.Pairing[player_index] then
+    if tunnel.paired or tunnel.pairing_player or global.Pairing[player_index] then
         return false
     end
 

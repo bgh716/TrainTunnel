@@ -102,6 +102,7 @@ function build_components(entity, player, name)
 
 	local tunnel = build_component(entity, player, name, TUNNEL_ENTITY)
 	if (tunnel == nil) then
+		game.print("Tunnel is nil.")
 		return false, tunnel, components
 	end
 
@@ -111,6 +112,7 @@ function build_components(entity, player, name)
 		local component = build_component(entity, player, name, component_info)
 
 		if component == nil then
+			game.print(component_info.name .. " is nil.")
 			return false, tunnel, components
 		end
 
@@ -243,9 +245,10 @@ end
 function create_tunnel(mask, tunnel, rails, components, player_index, placer_type, tunnel_index)
 	if placer_type == "Entrance" then
 		-- create tunnel object and register to dictionary
-		local tunnel_obj = create_new_tunnel_obj(mask.unit_number)
-		global.TunnelDic[tunnel.unit_number] = { mask.unit_number, "Entity" }
-		global.TunnelDic[mask.unit_number] = { mask.unit_number, placer_type }
+		local tunnel_index = mask.unit_number
+		local tunnel_obj = create_new_tunnel_obj(tunnel_index)
+		global.TunnelDic[tunnel.unit_number] = { tunnel_index, "Entity" }
+		global.TunnelDic[mask.unit_number] = { tunnel_index, placer_type }
 		global.Pairing[player_index] = {}
 
 		-- register components to tunnel object
@@ -253,9 +256,9 @@ function create_tunnel(mask, tunnel, rails, components, player_index, placer_typ
 		tunnel_obj.entrance.entity = tunnel
 		tunnel_obj.entrance.components = components
 		tunnel_obj.entrance.rails = rails
-		tunnel_obj.entrance.is_pairing = player_index
 
 		-- start pairing tunnel
+		tunnel_obj.pairing_player = player_index
 		start_pairing(mask.unit_number, player_index)
 
 	elseif placer_type == "Exit" then
@@ -292,7 +295,7 @@ function create_new_tunnel_obj(tunnel_index)
 
 	global.Tunnels[tunnel_index] = tunnel_obj
 
-	return global.Tunnels[tunnel_index]
+	return tunnel_obj
 end
 
 function find_tunnel_index_type(unit_number)
@@ -351,13 +354,13 @@ function remove_tunnel(tunnel_index, tunnel_type, player_index)
 	if tunnel_type == "Entrance" then
 
 		-- remove pairing
-		if tunnel_obj.entrance.is_pairing then
-			local player = game.get_player(tunnel_obj.entrance.is_pairing)
+		if tunnel_obj.pairing_player then
+			local player = game.get_player(tunnel_obj.pairing_player)
 			if player.cursor_stack.valid_for_read 
 			and player.cursor_stack.name == "TrainTunnelExitItem" then
 				player.cursor_stack.clear()
 			end
-			global.Pairing[tunnel_obj.entrance.is_pairing] = nil
+			global.Pairing[tunnel_obj.pairing_player] = nil
 		end
 
 		local entrance_components = tunnel_obj.entrance.components

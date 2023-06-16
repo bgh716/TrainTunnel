@@ -17,14 +17,12 @@ function on_init()
             --		tunnel_obj.entrance.entity = tunnel
             --		tunnel_obj.entrance.components = components
             --		tunnel_obj.entrance.rails = rails
-            --      tunnel_obj.entrance.is_pairing = false/player_index
             --   }
             --	tunnel_obj.exit = {}
             --
             --	tunnel_obj.paired = false
             --  tunnel_obj.distance = 0dd
-            --
-            --	tunnel_obj.path_is_drawing = false
+            --  tunnel_obj.pairing_player = nil / player_index
         }
     end
     -- dictionary to translate between mask id and tunnel id
@@ -43,7 +41,6 @@ function on_init()
     -- key is player index
     if global.Pairing == nil then
         global.Pairing = {
-            -- pairing_obj.player_index = player_index
             -- pairing_obj.timer = 0
             -- pairing_obj.tunnel_index = tunnel_index
         }

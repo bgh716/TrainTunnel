@@ -12,7 +12,7 @@ function start_drawing_path(event)
     local tunnel_index, _ = global.TunnelDic[entrance_mask.unit_number]
     local tunnel_obj = global.Tunnels[tunnel_index]
 
-    if entrance_mask then
+    if tunnel_obj then
         if tunnel_obj.paired == true and tunnel_obj.path_is_drawing == false then
             tunnel_obj.path_is_drawing = true
             local orientation = get_orientation_entity(tunnel_obj.entrance.entity, tunnel_obj.exit.entity)
@@ -22,6 +22,8 @@ function start_drawing_path(event)
         else
             --game.print("this tunnel not paired or drawing path already")
         end
+    else
+        game.print("Cannot Find tunnel object in table.")
     end
 end
 
