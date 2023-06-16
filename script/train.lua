@@ -9,16 +9,24 @@ local search_tunnel
 local first_carriage_entered, arrived_tunnel_handler
 
 -- when train collides with entrance
+-- event.entity is tunnel entity, event.cause is train
 function train_entered(event)
+	game.print("DBG : train_entered")
+
 	if not (event.cause and event.entity) then
 		return
 	end
 
+	game.print("DBG : collision_check")
+
 	local is_valid_collision, uarea, tunnel_index = collision_check(event,1)
+
 
 	if (not is_valid_collision) then
 		return
 	end
+
+	game.print("DBG : valid collision")
 
 	local tunnel_obj = global.Tunnels[tunnel_index]
 
@@ -51,7 +59,7 @@ end
 function train_process(event)
 	for unit, tunnel_obj in pairs(global.Tunnels) do
 		if next(tunnel_obj.train) ~= nil then
-			train = tunnel_obj.train
+			local train = tunnel_obj.train
 			if train.arrived == false then
 				--search_tunnel(train)
 				if train.land_tick <= game.tick then
@@ -77,7 +85,7 @@ function get_area(event, range)
 end
 
 function collision_check(event, range)
-	local tunnel_index = find_tunnel_index(event.entity)
+	local tunnel_index, _ = find_tunnel_index_type(event.entity.unit_number)
 	local tunnel_obj = global.Tunnels[tunnel_index]
 	if (
 		(event.cause and event.entity.name == "TrainTunnelEntrance")
@@ -234,7 +242,6 @@ function first_carriage_entered(event, uarea, tunnel_index)
 end
 
 
-
 function detect_train(train,type,direction)
 	if type == "Train" then
 		left_top = constants.TRAIN_DETECTION_RANGE[direction][1]
@@ -332,7 +339,6 @@ function search_tunnel(train)
 end
 
 function arrived_tunnel_handler(event, train, tunnel_obj)
-	local tunnel_obj = global.Tunnels[tunnel_index]
 	local exit_direction = tunnel_obj.exit.entity.direction
 
 	if train.head_escaped == false then

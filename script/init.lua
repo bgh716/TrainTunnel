@@ -45,7 +45,7 @@ function on_init()
         global.Pairing = {
             -- pairing_obj.player_index = player_index
             -- pairing_obj.timer = 0
-            -- pairing_obj.entrance_mask_index = entrance_mask_index
+            -- pairing_obj.tunnel_index = tunnel_index
         }
     end
 end

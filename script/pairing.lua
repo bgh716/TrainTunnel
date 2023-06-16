@@ -4,8 +4,8 @@ local is_free_for_pair
 function check_pairing_timeout(event)
     for player_index, pairing_obj in pairs(global.Pairing) do
         if pairing_obj.timer >= constants.PAIRING_TIMEOUT 
-        and global.Tunnels[pairing_obj.entrance_mask_index].entrance.is_pairing == player_index then
-            end_pairing(pairing_obj.entrance_mask_index, pairing_obj.player_index, false)
+        and global.Tunnels[pairing_obj.tunnel_index].entrance.is_pairing == player_index then
+            end_pairing(pairing_obj.tunnel_index, pairing_obj.player_index, false)
             game.get_player(player_index).print("pairing timed out")
         else
             pairing_obj.timer = pairing_obj.timer + 1
@@ -18,10 +18,11 @@ function begin_pairing(event)
     local player = game.get_player(player_index)
     local tunnel_mask = player.surface.find_entity('TrainTunnelEntrance-mask', event.cursor_position) --need capsule to detect tunnel constantly, and the capsule id should be stored as key of global.TunnelDic
     if tunnel_mask then
-        if is_free_for_pair(tunnel_mask.unit_number, player_index) then
+        local tunnel_index = global.TunnelDic[tunnel_mask.unit_number]
+        if is_free_for_pair(tunnel_index, player_index) then
             global.Pairing[player_index] = {}
-            global.Tunnels[tunnel_mask.unit_number].entrance.is_pairing = player_index
-            start_pairing(tunnel_mask.unit_number, player_index)
+            global.Tunnels[tunnel_index].entrance.is_pairing = player_index
+            start_pairing(tunnel_index, player_index)
         else
             player.print("tunnel is on paired or under pairing or user is already doing another pairing")
         end
@@ -35,25 +36,26 @@ function cancel_pairing(event)
     if global.Pairing[player_index] == nil then
         return
     end
-    local entrance_mask_index = global.Pairing[player_index].entrance_mask_index
-    end_pairing(entrance_mask_index, player_index, false)
+    local tunnel_index = global.Pairing[player_index].tunnel_index
+    end_pairing(tunnel_index, player_index, false)
 end
 
 
 
-function start_pairing(entrance_mask_index, player_index)
+function start_pairing(tunnel_index, player_index)
     local pairing_obj = global.Pairing[player_index]
     pairing_obj.player_index = player_index
     pairing_obj.timer = 0
-    pairing_obj.entrance_mask_index = entrance_mask_index
+    pairing_obj.tunnel_index = tunnel_index
 
     local player = game.get_player(player_index)
     player.clear_cursor()
     player.cursor_stack.set_stack({name="TrainTunnelExitItem"})
 end
 
-function end_pairing(entrance_mask_index, player_index, paired)
-    local tunnel_obj = global.Tunnels[entrance_mask_index]
+function end_pairing(tunnel_index, player_index, paired)
+    local tunnel_index = global.TunnelDic[tunnel_index]
+    local tunnel_obj = global.Tunnels[tunnel_index]
 
     if paired then
         tunnel_obj.paired = true
@@ -71,8 +73,8 @@ end
 
 
 -- check if both user and tunnel are free for pairing
-function is_free_for_pair(entrance_mask_index, player_index)
-    local tunnel = global.Tunnels[entrance_mask_index]
+function is_free_for_pair(tunnel_index, player_index)
+    local tunnel = global.Tunnels[tunnel_index]
     if tunnel.paired or tunnel.entrance.is_pairing or global.Pairing[player_index] then
         return false
     end
