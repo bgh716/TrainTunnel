@@ -80,7 +80,7 @@ end
 
 -- build a single component based on info
 function build_component(entity, player, name, component_info)
-	local position_adjustment = component_info.shift[pairs(global.Pairing)]
+	local position_adjustment = component_info.shift[entity.direction]
 
 	local component = entity.surface.create_entity({
 		name = string.gsub(component_info.name, TUNNEL_PLACEHOLDER_STRING, name),
@@ -100,7 +100,7 @@ function build_components(entity, player, name)
 	local success = true
 	local components = {}
 
-	local tunnel = build_component(entity, player, name, TUNNEL_TUNNEL_ENTITY)
+	local tunnel = build_component(entity, player, name, TUNNEL_ENTITY)
 	if (tunnel == nil) then
 		return false, tunnel, components
 	end
@@ -381,11 +381,11 @@ function remove_tunnel(tunnel_index, tunnel_type, player_index)
 end
 
 
--- name : item name. TUNNEL_PLACEHOLDER(?TT?) is replaced with tunnel entrance/exit name
+-- name : item name. TUNNEL_PLACEHOLDER(TT_NAME) is replaced with tunnel entrance/exit name
 -- shift : How much we shift the placer position (in tiles) to get
 -- the position of the tunnel entity based on the placer's direction
-TUNNEL_PLACEHOLDER_STRING = "?TT?"
-TUNNEL_TUNNEL_ENTITY = {
+TUNNEL_PLACEHOLDER_STRING = "TT_NAME"
+TUNNEL_ENTITY = {
 		name = TUNNEL_PLACEHOLDER_STRING,
 		shift = {
 			[defines.direction.north] =	{ 0, -4 },
