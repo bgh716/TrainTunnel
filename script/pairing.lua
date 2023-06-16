@@ -54,7 +54,6 @@ function start_pairing(tunnel_index, player_index)
 end
 
 function end_pairing(tunnel_index, player_index, paired)
-    local tunnel_index = global.TunnelDic[tunnel_index]
     local tunnel_obj = global.Tunnels[tunnel_index]
 
     if paired then

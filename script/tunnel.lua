@@ -5,8 +5,9 @@ local constants = require('constants')
 local destroy
 local get_component_position, get_name
 local create_tunnel, create_new_tunnel_obj, remove_tunnel
-local build_components, build_rails, build_mask
+local build_component, build_components, build_rails, build_mask
 local build_tunnel
+local TUNNEL_PLACEHOLDER_STRING, TUNNEL_ENTITY, TUNNEL_COMPONENTS
 
 --check which entity has built the tunnel, player building tunnel, and pass to placer built function
 function entity_built(event)
@@ -77,55 +78,68 @@ function destroy(object)
 	end
 end
 
-function build_components(entity,player,name,type)
+-- build a single component based on info
+function build_component(entity, player, name, component_info)
+	local position_adjustment = component_info.shift[pairs(global.Pairing)]
+
+	local component = entity.surface.create_entity({
+		name = string.gsub(component_info.name, TUNNEL_PLACEHOLDER_STRING, name),
+		position = math2d.position.add(entity.position, position_adjustment),
+		direction = entity.direction,
+		force = entity.force,
+		raise_built = true,
+		create_build_effect_smoke = false,
+		player = player
+	})
+
+	return component
+end
+
+-- build all components belonging to a tunnel
+function build_components(entity, player, name)
 	local success = true
 	local components = {}
-	for i=1, #constants.COMPONENT_POSITIONS,1 do
-		local position_adjusment = get_component_position(constants.COMPONENT_POSITIONS[i],entity.direction)
-		--game.print(position_adjusment)
-		local component = entity.surface.create_entity({
-			name = get_name(name,constants.COMPONENT_NAMES[i]),
-			position = math2d.position.add(entity.position, position_adjusment),
-			direction = entity.direction,
-			force = entity.force,
-			raise_built = true,
-			create_build_effect_smoke = false,
-			player = player
-		})
 
-		if component == nil then
-			success = false
-		else
-			component.rotatable = false
-			if i ~= 1 then
-				component.destructible = false
-				component.minable = false
-			end
-		end
-		table.insert(components,component)
+	local tunnel = build_component(entity, player, name, TUNNEL_TUNNEL_ENTITY)
+	if (tunnel == nil) then
+		return false, tunnel, components
 	end
 
-	local tunnel = components[1]
-	table.remove(components,1)
+	tunnel.rotatable = false
+
+	for _, component_info in pairs(TUNNEL_COMPONENTS) do
+		local component = build_component(entity, player, name, component_info)
+
+		if component == nil then
+			return false, tunnel, components
+		end
+
+		component.rotatable = false
+		component.destructible = false
+		component.minable = false
+
+		table.insert(components,component)
+	end
 
 	return success, tunnel, components
 end
 
+
 function build_rails(entity,player)
 
-	success = true
-	rails = {}
-	unit = {0,0}
-	position_adjusment = constants.PLACER_TO_RAIL_SHIFT_BY_DIRECTION[entity.direction]
+	local success = true
+	local rails = {}
+	local unit = {0,0}
+	local position_adjustment = constants.PLACER_TO_RAIL_SHIFT_BY_DIRECTION[entity.direction]
 	if (entity.direction == defines.direction.north or entity.direction == defines.direction.south) then
 		unit = {0,1}
 	else
 		unit = {1,0}
 	end
-	position_adjusment = math2d.position.add(position_adjusment,unit)
-	position = math2d.position.add(entity.position, position_adjusment)
-	i=1
-	while math.abs((position.x-entity.position.x)+(position.y-entity.position.y)) < 11 do
+	position_adjustment = math2d.position.add(position_adjustment,unit)
+	local position = math2d.position.add(entity.position, position_adjustment)
+
+	while math.abs((position.x-entity.position.x)+(position.y-entity.position.y)) < Constants.RAILS do
 		rail = entity.surface.create_entity({
 			name = "straight-rail",
 			position = position,
@@ -135,8 +149,8 @@ function build_rails(entity,player)
 			create_build_effect_smoke = false,
 			player = player
 		})
-		position_adjusment = math2d.position.add(position_adjusment,unit)
-		position = math2d.position.add(entity.position, position_adjusment)
+		position_adjustment = math2d.position.add(position_adjustment,unit)
+		position = math2d.position.add(entity.position, position_adjustment)
 		if rail == nil then
 			success = false
 		else
@@ -151,7 +165,7 @@ end
 
 function build_mask(entity,player,name)
 	mask = entity.surface.create_entity({
-		name = string.gsub(name, '-placer', '') .. "-mask",
+		name = name .. "-mask",
 		position = entity.position,
 		direction = entity.direction,
 		force = entity.force,
@@ -190,11 +204,11 @@ function build_tunnel(entity, player)
 
 	local name, placer_type, tunnel_index
 	if entity.name == "TrainTunnelEntrance-placer" then
-		name = "TrainTunnelEntrance-placer"
+		name = "TrainTunnelEntrance"
 		tunnel_index = "dummy"
 		placer_type = "Entrance"
 	elseif entity.name == "TrainTunnelExit-placer" then
-		name = "TrainTunnelExit-placer"
+		name = "TrainTunnelExit"
 		if global.Pairing[player.index] then
 			tunnel_index = global.Pairing[player.index].tunnel_index
 		end
@@ -203,7 +217,7 @@ function build_tunnel(entity, player)
 
 	local rails = build_rails(entity,player)
 	local mask_is_valid, mask = build_mask(entity,player,name)
-	local components_is_valid, tunnel, components = build_components(entity,player,name,placer_type)
+	local components_is_valid, tunnel, components = build_components(entity, player, name)
 
 	if mask_is_valid and components_is_valid and tunnel_index then
 		create_tunnel(mask, tunnel, rails, components, player.index, placer_type, tunnel_index)
@@ -365,3 +379,97 @@ function remove_tunnel(tunnel_index, tunnel_type, player_index)
 		tunnel_obj = nil
 	end
 end
+
+
+-- name : item name. TUNNEL_PLACEHOLDER(?TT?) is replaced with tunnel entrance/exit name
+-- shift : How much we shift the placer position (in tiles) to get
+-- the position of the tunnel entity based on the placer's direction
+TUNNEL_PLACEHOLDER_STRING = "?TT?"
+TUNNEL_TUNNEL_ENTITY = {
+		name = TUNNEL_PLACEHOLDER_STRING,
+		shift = {
+			[defines.direction.north] =	{ 0, -4 },
+			[defines.direction.east]  =	{ 4, 0 },
+			[defines.direction.south] = { -0, 2 },
+			[defines.direction.west]  = { -3, -0 }
+		}
+}
+TUNNEL_COMPONENTS = {
+	{
+		name = TUNNEL_PLACEHOLDER_STRING .. "-garage",
+		shift = {
+			[defines.direction.north] =	{ 0, 0 },
+			[defines.direction.east]  = { 0, 0 },
+			[defines.direction.south] = { 0, 0 },
+			[defines.direction.west]  = { 0, 0 }
+		}
+	},
+
+	{
+		name = TUNNEL_PLACEHOLDER_STRING .. "-block",
+		shift = {
+			[defines.direction.north] = { 0, 3 },
+			[defines.direction.east]  = { -3, 0 },
+			[defines.direction.south] = { -0, -3 },
+			[defines.direction.west]  = { 3, -0 }
+		}
+	},
+
+	{
+		name = TUNNEL_PLACEHOLDER_STRING .. "-wall",
+		shift = {
+			[defines.direction.north] = { 1, -0 },
+			[defines.direction.east]  = { 0,  1 },
+			[defines.direction.south] = { -1.5,  0 },
+			[defines.direction.west]  = { -0, -1.5 }
+		}
+	},
+
+	{
+		name = TUNNEL_PLACEHOLDER_STRING .. "-wall",
+		shift = {
+			[defines.direction.north] = { -1.5, -0 },
+			[defines.direction.east]  = { 0,  -1.5 },
+			[defines.direction.south] = { 1,  0 },
+			[defines.direction.west]  = { -0, 1 }
+		}
+	},
+
+	{
+		name = "rail-signal",
+		shift = {
+			[defines.direction.north] = { -1.5, 10 },
+			[defines.direction.east]  = { 7, -1.5 },
+			[defines.direction.south] = { 1, -10 },
+			[defines.direction.west]  = { -7, 1.5 }
+		}
+	},
+
+	{
+		name = "rail-signal",
+		shift = {
+			[defines.direction.north] = { -1.5, -7 },
+			[defines.direction.east]  = { -10, -1.5 },
+			[defines.direction.south] = { 1, 7 },
+			[defines.direction.west]  = { 10, 1.5 }
+		}
+	}
+}
+
+
+
+Constants.PLACER_TO_RAIL_SHIFT_BY_DIRECTION = {
+	[defines.direction.north] = { 0, -11.5 },
+	[defines.direction.east]  = { -11.5, 0 },
+	[defines.direction.south] = { 0, -11.5 },
+	[defines.direction.west]  = { -11.5, -0 }
+}
+
+
+-- set position for images
+Constants.PLACER_TO_GRAPHIC_SHIFT_BY_DIRECTION = {
+	[defines.direction.north] = { -0, -0 },
+	[defines.direction.east]  = { 0, -0 },
+	[defines.direction.south] = { 0, 0 },
+	[defines.direction.west]  = { 0, 0 }
+}
