@@ -344,6 +344,8 @@ function arrived_tunnel_handler(event, journey)
 	local train_info = journey.train_info
 	local destination = journey.destination
 
+	train_info.ghost_car.speed = 0
+
 	if train_info.head_escaped == false then
 		if not detect_train(journey.destination, "Train") then
 			--create new train
