@@ -4,7 +4,7 @@ local constants = require('constants')
 --pre declare local functions
 local destroy
 local get_component_position, get_name
-local register_tunnel, new_tunnel_obj, build_tunnel, remove_tunnel
+local register_tunnel, new_tunnel_obj, build_tunnel, remove_tunnel, remove_tunnel_entities
 local build_component, build_components, build_rails, build_mask
 local TUNNEL_PLACEHOLDER_STRING, TUNNEL_ENTITY, TUNNEL_COMPONENTS
 
@@ -305,6 +305,30 @@ function find_tunnel_index_type(unit_number)
 	end
 end
 
+
+--removes tunnel components physically given entrance or exit object
+function remove_tunnel_entities(entrace_or_exit)
+	local components = entrace_or_exit.components
+	for i=1,#components,1 do
+		components[i].destroy()
+	end
+
+	local entity = entrace_or_exit.entity
+	global.TunnelDic[entity.unit_number] = nil
+	entity.destroy()
+
+	local rails = entrace_or_exit.rails
+	for i=1,#rails,1 do
+		rails[i].destroy()
+	end
+
+	local mask = entrace_or_exit.mask
+	global.TunnelDic[mask.unit_number] = nil
+	mask.destroy()
+
+
+end
+
 -- remove tunnel physically, logically, and from dictionary
 function remove_tunnel(tunnel_index, tunnel_type, player_index)
 	local tunnel_obj = global.Tunnels[tunnel_index]
@@ -321,6 +345,8 @@ function remove_tunnel(tunnel_index, tunnel_type, player_index)
 			for i = 1, #tunnel_obj.drew, 1 do
 				if tunnel_obj.drew[i] then tunnel_obj.drew[i].destroy() end
 			end
+			tunnel_obj.drew = {}
+			tunnel_obj.path_is_drawing = false
 		end
 
 		if tunnel_obj.train then
@@ -328,52 +354,34 @@ function remove_tunnel(tunnel_index, tunnel_type, player_index)
 			if tunnel_obj.train.TempTrain2 then tunnel_obj.train.TempTrain2.destroy() end
 			if tunnel_obj.train.ghost_car then tunnel_obj.train.ghost_car.destroy() end
 			tunnel_obj.train = {}
+			tunnel_obj.train_speed = 0
 		end
 
-		local exit_components = tunnel_obj.exit.components
-		for i=1,#exit_components,1 do
-			exit_components[i].destroy()
+		-- remove entrance entities
+		remove_tunnel_entities(tunnel_obj.exit)
+
+		tunnel_obj.paired = false
+		tunnel_obj.distance = 0
+		tunnel_obj.exit = {}
+	end
+
+	if tunnel_type == "Entrance" then
+		-- remove pairing
+		if tunnel_obj.pairing_player then
+			local player = game.get_player(tunnel_obj.pairing_player)
+			if player.cursor_stack.valid_for_read
+					and player.cursor_stack.name == "TrainTunnelExitItem" then
+				player.cursor_stack.clear()
+			end
+			global.Pairing[tunnel_obj.pairing_player] = nil
+			tunnel_obj.pairing_player = nil
 		end
 
-		global.TunnelDic[tunnel_obj.exit.entity.unit_number] = nil
-		tunnel_obj.exit.entity.destroy()
+		-- remove entrance entities
+		remove_tunnel_entities(tunnel_obj.entrance)
 
-		for i=1,#tunnel_obj.exit.rails,1 do
-			tunnel_obj.exit.rails[i].destroy()
-		end
-
-		global.TunnelDic[tunnel_obj.exit.mask.unit_number] = nil
-		tunnel_obj.exit.mask.destroy()
+		tunnel_obj = nil
 	end
-
-	-- remove pairing
-	if tunnel_obj.pairing_player then
-		local player = game.get_player(tunnel_obj.pairing_player)
-		if player.cursor_stack.valid_for_read
-		and player.cursor_stack.name == "TrainTunnelExitItem" then
-			player.cursor_stack.clear()
-		end
-		global.Pairing[tunnel_obj.pairing_player] = nil
-		tunnel_obj.pairing_player = nil
-	end
-
-	local entrance_components = tunnel_obj.entrance.components
-	for i=1,#entrance_components,1 do
-		entrance_components[i].destroy()
-	end
-
-	global.TunnelDic[tunnel_obj.entrance.entity.unit_number] = nil
-	tunnel_obj.entrance.entity.destroy()
-
-	for i=1,#tunnel_obj.entrance.rails,1 do
-		tunnel_obj.entrance.rails[i].destroy()
-	end
-
-	global.TunnelDic[tunnel_obj.entrance.mask.unit_number] = nil
-	tunnel_obj.entrance.mask.destroy()
-	tunnel_obj.train = nil
-	tunnel_obj.drew = nil
-	tunnel_obj = nil
 end
 
 
