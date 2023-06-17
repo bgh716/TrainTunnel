@@ -327,7 +327,7 @@ local function makeTunnelPrototypes(baseName)
 			itemName
 		),
 
-		--make the garage for TempTrain
+		--make the garage for temp_train
 		makeGarageEntity(
 			baseName .. '-garage',
 			iconFilename,

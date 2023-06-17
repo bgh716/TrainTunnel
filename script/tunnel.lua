@@ -337,9 +337,11 @@ function remove_tunnel(tunnel_index, tunnel_type, player_index)
 		game.print("Tunnel Object is nil")
 		return
 	end
-	
+
+
+	local journey = global.Journeys[tunnel_index]
 	--remove exit and inside objects
-	if tunnel_obj.paired then
+	if journey then
 		if tunnel_obj.drawing_car then
 			tunnel_obj.drawing_car.destroy()
 			for i = 1, #tunnel_obj.drew, 1 do
@@ -349,17 +351,28 @@ function remove_tunnel(tunnel_index, tunnel_type, player_index)
 			tunnel_obj.path_is_drawing = false
 		end
 
-		if tunnel_obj.train then
-			if tunnel_obj.train.TempTrain then tunnel_obj.train.TempTrain.destroy() end
-			if tunnel_obj.train.TempTrain2 then tunnel_obj.train.TempTrain2.destroy() end
-			if tunnel_obj.train.ghost_car then tunnel_obj.train.ghost_car.destroy() end
-			tunnel_obj.train = {}
-			tunnel_obj.train_speed = 0
+		local train_info = journey.train_info
+
+		if train_info.temp_train_entrance then
+			train_info.temp_train_entrance.destroy()
+		end
+		if train_info.temp_train_exit then
+			train_info.temp_train_exit.destroy()
+		end
+		if train_info.ghost_car then
+			train_info.ghost_car.destroy()
 		end
 
-		-- remove entrance entities
+		train_info.train_in_tunnel = nil
+		train_info.train_speed = 0
+		--TODO : deal with new train that was being made
+	end
+
+	if tunnel_obj.paired then
+		-- remove exit entities
 		remove_tunnel_entities(tunnel_obj.exit)
 
+		-- clear pairing info
 		tunnel_obj.paired = false
 		tunnel_obj.distance = 0
 		tunnel_obj.exit = {}

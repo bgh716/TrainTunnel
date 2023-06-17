@@ -68,7 +68,7 @@ script.on_nth_tick(
 	1,
 	(function(event)
 		flush_nil(event)
-		train_process(event)
+		journey_process(event)
 		check_pairing_timeout(event)
 	end)
 )
