@@ -55,8 +55,6 @@ function journey_process(event)
 			if train_escaped then
 				global.Journeys[index] = nil
 			end
-		else
-			journey.land_tick = journey.land_tick + 1
 		end
 	end
 end
@@ -108,7 +106,7 @@ function create_temp_train(event, position, type)
 end
 
 -- copy entering train information to train in tunnel
-function copy_train(event, exit_direction)
+function copy_train(event, exit_orientation)
 	local train_in_tunnel = {}
 
 	--save basic information
@@ -116,7 +114,7 @@ function copy_train(event, exit_direction)
 	if (event.cause.get_driver()) then
 		train_in_tunnel.passenger = event.cause.get_driver()
 	end
-	train_in_tunnel.orientation = exit_direction -0.5
+	train_in_tunnel.orientation = exit_orientation
 	train_in_tunnel.backer_name = event.cause.backer_name
 	train_in_tunnel.color = event.cause.color
 	train_in_tunnel.manual_mode = event.cause.train.manual_mode
@@ -226,7 +224,8 @@ function first_carriage_entered(event, uarea, tunnel_index)
 
 	--copy train information
 	local exit_direction = global.Tunnels[tunnel_index].exit.entity.direction
-	train_info.train_in_tunnel = copy_train(event, exit_direction)
+	local exit_orientation = global.Tunnels[tunnel_index].exit.entity.orientation - 0.5
+	train_info.train_in_tunnel = copy_train(event, exit_orientation)
 
 	journey.tunnel_index = tunnel_index
 	journey.land_tick = math.ceil(game.tick + math.abs(tunnel_obj.distance/speed))
@@ -236,7 +235,8 @@ function first_carriage_entered(event, uarea, tunnel_index)
 		exit_uarea = exit_uarea,
 		exit_position = exit_position,
 		exit_direction = exit_direction,
-		exit_surface = tunnel_obj.exit.entity.surface
+		exit_orientation = exit_orientation,
+		surface = tunnel_obj.exit.entity.surface
 	}
 	journey.destination = destination
 
@@ -281,7 +281,7 @@ function load_train(train_info, destination)
 	local new_train = train_info.ghost_car.surface.create_entity({
 		name = train_in_tunnel.name,
 		position = destination.exit_position,
-		orientation = destination.exit_direction,
+		orientation = destination.exit_orientation,
 		force = train_info.ghost_car.force,
 		raise_built = true
 	})
@@ -304,39 +304,36 @@ function load_train(train_info, destination)
 	return new_train
 end
 
-function load_carriage(train_info)
+function load_carriage(train_info, destination)
 	local new_carriage
 	if train_info.new_train.valid then
-		local manual_mode = train_info.train_in_tunnel.manual_mode
-		new_carriage = train_info.ghost_car.surface.create_entity({
+		new_carriage = destination.surface.create_entity({
 			name = train_info.carriages[train_info.num].type,
-			position = train_info.exit_position,
-			orientation = train_info.orientation,
+			position = destination.exit_position,
+			orientation = destination.exit_orientation,
 			force = train_info.newTrain.force,
 			raise_built = true
 		})
 		if new_carriage then
-
+			local train_in_tunnel = train_info.train_in_tunnel
 			new_carriage.connect_rolling_stock(defines.rail_direction.front)
-			train_info.newTrain.train.manual_mode = manual_mode
+			train_info.newTrain.train.manual_mode = train_in_tunnel.manual_mode
 
 			if (new_carriage.type == "cargo-wagon") then
-				new_carriage.get_inventory(defines.inventory.cargo_wagon).set_bar(train_info.carriages[train_info.num].bar)
-				for i, filter in pairs(train_info.carriages[train_info.num].filter) do
+				new_carriage.get_inventory(defines.inventory.cargo_wagon).set_bar(train_in_tunnel.carriages[train_info.escaped_carriages].bar)
+				for i, filter in pairs(train_in_tunnel.carriages[train_info.escaped_carriages].filter) do
 					new_carriage.get_inventory(defines.inventory.cargo_wagon).set_filter(i, filter)
 				end
-				for ItemName, quantity in pairs(train_info.carriages[train_info.num].cargo) do
+				for ItemName, quantity in pairs(train_in_tunnel.carriages[train_info.escaped_carriages].cargo) do
 					new_carriage.get_inventory(defines.inventory.cargo_wagon).insert({ name = ItemName, count = quantity})
 				end
 			elseif (new_carriage.type == "fluid-wagon") then
-				for FluidName, quantity in pairs(train_info.carriages[train_info.num].fluids) do
+				for FluidName, quantity in pairs(train_in_tunnel.carriages[train_info.escaped_carriages].fluids) do
 					new_carriage.insert_fluid({ name = FluidName, amount = quantity})
 				end
 			end
 
 		end
-	else
-		train_info.escape_done = true
 	end
 
 	return new_carriage
@@ -344,11 +341,13 @@ end
 
 function arrived_tunnel_handler(event, journey)
 	local train_info = journey.train_info
+	local destination = journey.destination
+
 	if train_info.head_escaped == false then
 		if not detect_train(journey.destination, "Train") then
 			--create new train
-			journey.train_info.temp_train_exit.destroy()
-			local new_train = load_train(train_info)
+			train_info.temp_train_exit.destroy()
+			local new_train = load_train(train_info, destination)
 
 			if new_train then
 				--transfer passenger
@@ -364,11 +363,14 @@ function arrived_tunnel_handler(event, journey)
 				train_info.escaped_carriages = 1
 				train_info.head_escaped = true
 				train_info.new_train = new_train
+			else
+				-- TODO handle abrupt ending of train loading
+				train_info.escaped_carriages = train_info.entered_carriages
 			end
 		end
 	elseif train_info.head_escaped == true then
-		if not detect_train(journey.destination, "Carriage") then
-			local new_carriage = load_carriage(train_info)
+		if not detect_train(destination, "Carriage") then
+			local new_carriage = load_carriage(train_info, destination)
 			if new_carriage then
 				train_info.escaped_carriages = train_info.escaped_carriages + 1
 			end
