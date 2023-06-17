@@ -281,16 +281,15 @@ end
 function new_tunnel_obj(tunnel_index)
 	local tunnel_obj = {}
 	tunnel_obj.tunnel_index = tunnel_index
-	tunnel_obj.train = {}
-	tunnel_obj.train_speed = 0
+
+	tunnel_obj.path_is_drawing = false
 
 	tunnel_obj.entrance = {}
 	tunnel_obj.exit = {}
 
 	tunnel_obj.paired = false
 	tunnel_obj.distance = 0
-
-	tunnel_obj.path_is_drawing = false
+	tunnel_obj.pairing_player = nil
 
 	global.Tunnels[tunnel_index] = tunnel_obj
 

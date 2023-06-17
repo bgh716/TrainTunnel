@@ -73,12 +73,13 @@ end
 function collision_check(event, range)
 	local tunnel_index, _ = find_tunnel_index_type(event.entity.unit_number)
 	local tunnel_obj = global.Tunnels[tunnel_index]
+	local journey = global.Journeys[tunnel_index]
 	if (
 		(event.cause and event.entity.name == "TrainTunnelEntrance")
 		and (tunnel_obj and tunnel_obj.paired == true)
 		and ( -- tunnel is empty and locomotive is coming in, or carriage is added to tunnel already being used
-			(next(tunnel_obj.train) == nil and event.cause.type == "locomotive")
-			or (next(tunnel_obj.train) ~= nil
+			(journey == nil and event.cause.type == "locomotive")
+			or (journey ~= nil
 				and (event.cause.type == "cargo-wagon" or event.cause.type == "fluid-wagon"))
 		)
 	) then
@@ -306,29 +307,29 @@ end
 
 function load_carriage(train_info, destination)
 	local new_carriage
+	local old_carriage = train_info.train_in_tunnel.carriages[train_info.escaped_carriages + 1]
 	if train_info.new_train.valid then
 		new_carriage = destination.surface.create_entity({
-			name = train_info.carriages[train_info.num].type,
+			name = old_carriage.type,
 			position = destination.exit_position,
 			orientation = destination.exit_orientation,
-			force = train_info.newTrain.force,
+			force = train_info.new_train.force,
 			raise_built = true
 		})
 		if new_carriage then
-			local train_in_tunnel = train_info.train_in_tunnel
 			new_carriage.connect_rolling_stock(defines.rail_direction.front)
-			train_info.newTrain.train.manual_mode = train_in_tunnel.manual_mode
+			train_info.new_train.train.manual_mode = train_info.train_in_tunnel.manual_mode
 
 			if (new_carriage.type == "cargo-wagon") then
-				new_carriage.get_inventory(defines.inventory.cargo_wagon).set_bar(train_in_tunnel.carriages[train_info.escaped_carriages].bar)
-				for i, filter in pairs(train_in_tunnel.carriages[train_info.escaped_carriages].filter) do
+				new_carriage.get_inventory(defines.inventory.cargo_wagon).set_bar(old_carriage.bar)
+				for i, filter in pairs(old_carriage.filter) do
 					new_carriage.get_inventory(defines.inventory.cargo_wagon).set_filter(i, filter)
 				end
-				for ItemName, quantity in pairs(train_in_tunnel.carriages[train_info.escaped_carriages].cargo) do
+				for ItemName, quantity in pairs(old_carriage.cargo) do
 					new_carriage.get_inventory(defines.inventory.cargo_wagon).insert({ name = ItemName, count = quantity})
 				end
 			elseif (new_carriage.type == "fluid-wagon") then
-				for FluidName, quantity in pairs(train_in_tunnel.carriages[train_info.escaped_carriages].fluids) do
+				for FluidName, quantity in pairs(old_carriage.fluids) do
 					new_carriage.insert_fluid({ name = FluidName, amount = quantity})
 				end
 			end
