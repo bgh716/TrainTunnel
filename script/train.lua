@@ -11,13 +11,9 @@ local first_carriage_entered, arrived_tunnel_handler
 -- when train collides with entrance
 -- event.entity is tunnel entity, event.cause is train
 function train_entered(event)
-	game.print("DBG : train_entered")
-
 	if not (event.cause and event.entity) then
 		return
 	end
-
-	game.print("DBG : collision_check")
 
 	local is_valid_collision, uarea, tunnel_index = collision_check(event,1)
 
@@ -25,8 +21,6 @@ function train_entered(event)
 	if (not is_valid_collision) then
 		return
 	end
-
-	game.print("DBG : valid collision")
 
 	local tunnel_obj = global.Tunnels[tunnel_index]
 
