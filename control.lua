@@ -63,16 +63,12 @@ script.on_nth_tick(
 	5,
 	draw_path
 )
-script.on_nth_tick(
-	1,
-	flush_nil
-)
-script.on_nth_tick(
-	1,
-	train_process
-)
-script.on_nth_tick(
-	1,
-	check_pairing_timeout
-)
 
+script.on_nth_tick(
+	1,
+	(function(event)
+		flush_nil(event)
+		journey_process(event)
+		check_pairing_timeout(event)
+	end)
+)
