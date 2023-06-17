@@ -242,7 +242,7 @@ local function makeGarageEntity(name, icon, pictureFileName, placerItem)
 		selection_box = {{-0.01, -0.01}, {0.01, 0.01}},
 		selection_priority = 100,
 		collision_box = {{-2, -3.5}, {2, 7}},
-		collision_mask = {"player-layer","train-layer"},
+		collision_mask = {"player-layer"},
 		render_layer = "lower-object-above-shadow",
 		pictures = {
 			direction_count = 1,

@@ -9,7 +9,7 @@ function start_drawing_path(event)
     if entrance_mask == nil then
         return
     end
-    local tunnel_index, _ = global.TunnelDic[entrance_mask.unit_number]
+    local tunnel_index = global.TunnelDic[entrance_mask.unit_number][1]
     local tunnel_obj = global.Tunnels[tunnel_index]
 
     if tunnel_obj then

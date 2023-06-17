@@ -1,7 +1,7 @@
 Constants = {}
 
 Constants.TRAIN_MIN_SPEED = 0.5
-Constants.PATH_SPACING = 0.75
+Constants.PATH_SPACING = 0.5
 Constants.PAIRING_TIMEOUT = 3000
 Constants.GC_RANGE =5.5 --gc
 Constants.TEMP1_RANGE = 6.5 --temp1 !!!!this value must not be changed!!!

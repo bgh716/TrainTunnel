@@ -182,7 +182,7 @@ end
 
 -- First train component enters tunnel
 function first_carriage_entered(event, uarea, tunnel_index)
-	local tunnel_obj = global.Tunnel[tunnel_index]
+	local tunnel_obj = global.Tunnels[tunnel_index]
 	local exit_uarea = get_uarea(tunnel_index)
 
 	local gc_area = math2d.position.multiply_scalar(uarea,constants.GC_RANGE)
