@@ -5,7 +5,6 @@ require('tunnel')
 
 local detect_train, collision_check, get_area, get_uarea
 local create_temp_train, create_ghost_car, copy_train, load_train, load_carriage
-local search_tunnel
 local first_carriage_entered, arrived_tunnel_handler
 
 -- when train collides with entrance
@@ -245,8 +244,8 @@ function detect_train(train,type,direction)
 		right_down = constants.CARRIAGE_DETECTION_RANGE[direction][2]
 	end
 
-	left_top = math2d.position.add(train.destination.tunnel.position,left_top)
-	right_down = math2d.position.add(train.destination.tunnel.position,right_down)
+	left_top = math2d.position.add(train.destination.position,left_top)
+	right_down = math2d.position.add(train.destination.position,right_down)
 
 	entities = train.ghost_car.surface.find_entities({ left_top, right_down})
 
@@ -288,9 +287,10 @@ function load_train(train, train_speed)
 end
 
 function load_carriage(train)
+	local new_carriage
 	if train.newTrain.valid then
 		local manual_mode = train.manual_mode
-		local new_carriage = train.ghost_car.surface.create_entity({
+		new_carriage = train.ghost_car.surface.create_entity({
 			name = train.carriages[train.num].type,
 			position = train.exit_position,
 			orientation = train.orientation,
@@ -321,15 +321,7 @@ function load_carriage(train)
 		train.escape_done = true
 	end
 
-	return NewCarriage
-end
-
-function search_tunnel(train)
-	target = train.ghost_car.surface.find_entity("TrainTunnelExit-mask", train.ghost_car.position)
-	if target and target.unit_number == train.destination.mask.unit_number then
-		train.arrived = true
-		train.ghost_car.speed = 0
-	end
+	return new_carriage
 end
 
 function arrived_tunnel_handler(event, train, tunnel_obj)
