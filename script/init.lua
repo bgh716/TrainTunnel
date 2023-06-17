@@ -21,7 +21,7 @@ function on_init()
             --	tunnel_obj.exit = {}
             --
             --	tunnel_obj.paired = false
-            --  tunnel_obj.distance = 0dd
+            --  tunnel_obj.distance = 0
             --  tunnel_obj.pairing_player = nil / player_index
         }
     end
