@@ -66,7 +66,7 @@ function on_init()
             -- Info about train entities
             -- journey.train_info = {
                 -- train_info.train_speed
-                -- train_info.ghost_car
+                -- train_info.ghost_car = {ghost_car,landtick}
                 -- train_info.train_in_tunnel = {
                     -- train_in_tunnel.name
                     -- train_in_tunnel.orientation

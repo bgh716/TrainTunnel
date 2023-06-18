@@ -18,10 +18,10 @@ Constants.TRAIN_DETECTION_RANGE = {
 }
 
 Constants.CARRIAGE_DETECTION_RANGE = {
-    [defines.direction.north] = {{ -2, 0 }, { 2, 4.5 }},
-    [defines.direction.east]  = {{ -3, -2 }, { 0, 2 }},
-    [defines.direction.south] = {{ -2, -4.5 }, { 2, 0 }},
-    [defines.direction.west]  = {{ 0, -2 }, { 3, 2 }}
+    [defines.direction.north] = {{ -2, 0 }, { 2, 13 }},
+    [defines.direction.east]  = {{ -13, -2 }, { 0, 2 }},
+    [defines.direction.south] = {{ -2, -13 }, { 2, 0 }},
+    [defines.direction.west]  = {{ 0, -2 }, { 13, 2 }}
 }
 
 -- set position for images
