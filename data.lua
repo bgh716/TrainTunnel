@@ -1,4 +1,6 @@
-require("prototypes.PropHunt")
+require("prototypes.ghost_car")
 require ("prototypes.technology")
 require ("prototypes.tunnels")
-require("prototypes.GhostLoco")
+require("prototypes.ghost_loco")
+require("prototypes.custom_event")
+require("prototypes.path")

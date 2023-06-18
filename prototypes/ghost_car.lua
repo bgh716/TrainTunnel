@@ -1,8 +1,10 @@
+--ghost entity used to simulate train under the tunnel
 local function makeGhost(name)
 	local T = table.deepcopy(data.raw.car["car"])
 	T.name = name
+	T.icon = data.raw.locomotive["locomotive"].icon
 	T.flags = {"placeable-off-grid", "not-blueprintable", "not-deconstructable", "hidden", "not-selectable-in-game"}
-	T.collision_mask = {"layer-55"}
+	T.collision_mask = {}
 	T.selectable_in_game = false
 	T.corpse = nil
 	T.energy_source ={type = "void"}
@@ -19,6 +21,7 @@ local function makeGhost(name)
 	T.light.intensity = 0
 	T.light.size = 0
 	T.turret_animation = nil
+	T.guns = nil
 	T.animation =
 		{
 		filename = "__TrainTunnel__/graphics/nothing.png",
@@ -61,5 +64,4 @@ local function makeGhost(name)
 	})
 end
 
-makeGhost("PropCarT1")
-makeGhost("PropCarT2")
+makeGhost("GhostCar")
